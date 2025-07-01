@@ -72,14 +72,65 @@ export default function HomeScreen() {
         onSwiped={handleSwiped}
         onSwipedAll={() => console.log('Swiped all cards')}
         cardIndex={0}
-        backgroundColor={'#f5f5f5'}
-        stackSize={3}
-        stackSeparation={15}
-        animateOverlayLabelsOpacity
-        animateCardOpacity
-        swipeBackCard
+        backgroundColor={'#000000'}
+        stackSize={2}
+        stackSeparation={10}
+        animateOverlayLabelsOpacity={false}
+        animateCardOpacity={false}
+        swipeBackCard={false}
+        disableLeftSwipe={true}
+        disableRightSwipe={true}
+        disableTopSwipe={false}
+        disableBottomSwipe={false}
+        goBackToPreviousCardOnSwipeBottom={false}
+        goBackToPreviousCardOnSwipeTop={false}
         containerStyle={styles.swiperContainer}
-        cardVerticalMargin={height * 0.1}
+        cardVerticalMargin={20}
+        cardHorizontalMargin={16}
+        verticalSwipe={true}
+        horizontalSwipe={false}
+        verticalThreshold={50}
+        horizontalThreshold={250}
+        outputRotationRange={['-10deg', '0deg', '10deg']}
+        inputRotationRange={[-50, 0, 50]}
+        overlayLabels={{
+          top: {
+            title: 'READ LATER',
+            style: {
+              label: {
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                fontSize: 16,
+                fontWeight: 'bold',
+                borderRadius: 10,
+                padding: 10,
+              },
+              wrapper: {
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
+            }
+          },
+          bottom: {
+            title: 'NEXT',
+            style: {
+              label: {
+                backgroundColor: '#FF5722',
+                color: 'white',
+                fontSize: 16,
+                fontWeight: 'bold',
+                borderRadius: 10,
+                padding: 10,
+              },
+              wrapper: {
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
+            }
+          }
+        }}
       />
     </View>
   );
@@ -88,7 +139,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -99,21 +150,25 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
-    color: '#888',
+    color: '#ffffff',
+    fontWeight: '600',
   },
   errorText: {
     fontSize: 18,
-    color: '#E50914',
+    color: '#FF5722',
     marginBottom: 10,
+    fontWeight: '600',
   },
   emptyText: {
     fontSize: 18,
-    color: '#888',
+    color: '#ffffff',
     marginBottom: 10,
+    fontWeight: '600',
   },
   retryText: {
     fontSize: 16,
-    color: '#E50914',
+    color: '#FF5722',
     textDecorationLine: 'underline',
+    fontWeight: '600',
   },
 });

@@ -17,7 +17,7 @@ export default function App() {
     <AuthProvider>
       <FeedProvider>
         <NavigationContainer>
-          <StatusBar style="auto" />
+          <StatusBar style="light" backgroundColor="#000000" />
           <Tab.Navigator
             screenOptions={({ route }) => ({
               tabBarIcon: ({ focused, color, size }) => {
@@ -35,8 +35,21 @@ export default function App() {
 
                 return <Icon name={iconName} size={size} color={color} />;
               },
-              tabBarActiveTintColor: '#E50914',
-              tabBarInactiveTintColor: 'gray',
+              tabBarActiveTintColor: '#FF5722',
+              tabBarInactiveTintColor: '#888888',
+              tabBarStyle: {
+                backgroundColor: '#1a1a1a',
+                borderTopColor: '#333333',
+                borderTopWidth: 1,
+                paddingBottom: 8,
+                paddingTop: 8,
+                height: 60,
+              },
+              tabBarLabelStyle: {
+                fontSize: 12,
+                fontWeight: '600',
+                marginTop: 4,
+              },
               headerShown: false,
             })}
           >

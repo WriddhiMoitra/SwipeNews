@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { Article } from '../types/Article';
+import { useFeed } from '../contexts/FeedContext';
 import Icon from 'react-native-vector-icons/Feather';
 
 interface NewsCardProps {
@@ -9,36 +10,108 @@ interface NewsCardProps {
   onShare: (articleUrl: string) => void;
 }
 
+const { width, height } = Dimensions.get('window');
+
 const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
+  const { state } = useFeed();
+  const isArticleSaved = state.savedArticles.includes(article.id);
+  
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      return `${diffInMinutes}m ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays}d ago`;
+    }
+  };
+
+  // Generate a placeholder image URL based on article title
+  const getPlaceholderImage = () => {
+    const seed = article.title.replace(/\s+/g, '+');
+    return `https://picsum.photos/400/250?random=${article.id}`;
+  };
+
   return (
     <View style={styles.cardContainer}>
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>{article.title}</Text>
-        <Text style={styles.description}>{article.description}</Text>
-        <Text style={styles.source}>{article.source_id}</Text>
-        <Text style={styles.date}>
-          {article.published_at.toLocaleDateString()} {article.published_at.toLocaleTimeString()}
-        </Text>
+      {/* Header with source and time */}
+      <View style={styles.header}>
+        <View style={styles.sourceContainer}>
+          <View style={styles.sourceDot} />
+          <Text style={styles.sourceText}>{article.source_id.toUpperCase()}</Text>
+        </View>
+        <Text style={styles.timeText}>{formatTimeAgo(article.published_at)}</Text>
       </View>
+
+      {/* Main content area */}
+      <ScrollView style={styles.contentScrollView} showsVerticalScrollIndicator={false}>
+        {/* Article Image */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: getPlaceholderImage() }}
+            style={styles.articleImage}
+            resizeMode="cover"
+          />
+          <View style={styles.imageOverlay} />
+        </View>
+
+        {/* Article Content */}
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>{article.title}</Text>
+          <Text style={styles.description}>{article.description}</Text>
+          
+          {/* Category tag */}
+          <View style={styles.categoryContainer}>
+            <Text style={styles.categoryText}>{article.category.toUpperCase()}</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Action buttons */}
       <View style={styles.actionContainer}>
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, styles.saveButton]}
           onPress={() => onSave(article.id)}
+          activeOpacity={0.7}
         >
           <Icon
-            name={article.saved ? 'bookmark' : 'bookmark'}
-            size={24}
-            color={article.saved ? '#E50914' : '#888'}
+            name={isArticleSaved ? 'bookmark' : 'bookmark'}
+            size={20}
+            color={isArticleSaved ? '#FF5722' : '#ffffff'}
+            style={styles.actionIcon}
           />
-          <Text style={styles.actionText}>Save</Text>
+          <Text style={[styles.actionText, isArticleSaved && styles.savedText]}>
+            {isArticleSaved ? 'Saved' : 'Save'}
+          </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, styles.shareButton]}
           onPress={() => onShare(article.url)}
+          activeOpacity={0.7}
         >
-          <Icon name="share-2" size={24} color="#888" />
+          <Icon name="share-2" size={20} color="#ffffff" style={styles.actionIcon} />
           <Text style={styles.actionText}>Share</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.readMoreButton]}
+          activeOpacity={0.7}
+        >
+          <Icon name="external-link" size={20} color="#ffffff" style={styles.actionIcon} />
+          <Text style={styles.actionText}>Read More</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Swipe indicator */}
+      <View style={styles.swipeIndicator}>
+        <View style={styles.swipeBar} />
+        <Text style={styles.swipeText}>Swipe up for next story</Text>
       </View>
     </View>
   );
@@ -46,60 +119,164 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
     overflow: 'hidden',
-    elevation: 3,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    margin: 10,
-    height: 400,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    margin: 0,
+    height: height - 140,
+    width: width - 32,
     flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  header: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+  sourceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sourceDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF5722',
+    marginRight: 8,
+  },
+  sourceText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FF5722',
+    letterSpacing: 1,
+  },
+  timeText: {
+    fontSize: 12,
+    color: '#888888',
+    fontWeight: '500',
+  },
+  contentScrollView: {
+    flex: 1,
+  },
+  imageContainer: {
+    height: 200,
+    marginHorizontal: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  articleImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
   },
   contentContainer: {
-    padding: 15,
+    padding: 20,
     flex: 1,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#000',
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 12,
+    color: '#ffffff',
+    lineHeight: 28,
+    letterSpacing: -0.5,
   },
   description: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 10,
-    flex: 1,
+    fontSize: 16,
+    color: '#cccccc',
+    marginBottom: 20,
+    lineHeight: 24,
+    fontWeight: '400',
   },
-  source: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 5,
+  categoryContainer: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#333333',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 10,
   },
-  date: {
-    fontSize: 12,
-    color: '#888',
+  categoryText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FF5722',
+    letterSpacing: 1,
   },
   actionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    padding: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#2a2a2a',
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: '#333333',
   },
   actionButton: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#333333',
+    minWidth: 80,
+  },
+  saveButton: {
+    backgroundColor: '#333333',
+  },
+  shareButton: {
+    backgroundColor: '#333333',
+  },
+  readMoreButton: {
+    backgroundColor: '#FF5722',
+  },
+  actionIcon: {
+    marginRight: 6,
   },
   actionText: {
     fontSize: 12,
-    color: '#888',
-    marginTop: 2,
+    color: '#ffffff',
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  savedText: {
+    color: '#FF5722',
+  },
+  swipeIndicator: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#2a2a2a',
+  },
+  swipeBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#555555',
+    borderRadius: 2,
+    marginBottom: 6,
+  },
+  swipeText: {
+    fontSize: 10,
+    color: '#888888',
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
 });
 
