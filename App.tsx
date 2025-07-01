@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { FeedProvider } from './contexts/FeedContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
+import { PersonalizationProvider } from './contexts/PersonalizationContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import HomeScreen from './app/(tabs)/index';
 import SavedScreen from './app/(tabs)/saved';
@@ -81,9 +82,10 @@ function AppContent() {
 
   return (
     <AnalyticsProvider>
-      <OfflineProvider>
-        <FeedProvider>
-          <NavigationContainer>
+      <PersonalizationProvider>
+        <OfflineProvider>
+          <FeedProvider>
+            <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color, size }) => {
@@ -146,8 +148,9 @@ function AppContent() {
           <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
       </NavigationContainer>
-        </FeedProvider>
-      </OfflineProvider>
+          </FeedProvider>
+        </OfflineProvider>
+      </PersonalizationProvider>
     </AnalyticsProvider>
   );
 }

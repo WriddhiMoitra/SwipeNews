@@ -13,21 +13,51 @@ const { height } = Dimensions.get('window');
 export default function HomeScreen() {
   const { state, refreshFeed, markAsRead, toggleSaveArticle } = useFeed();
   const { theme } = useTheme();
-  const { trackArticleRead, trackArticleSaved, trackArticleShared } = useAnalytics();
+  const { trackArticleRead, trackArticleSaved, trackArticleShared, trackArticleSkipped, trackSwipeAction } = useAnalytics();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [articleStartTime, setArticleStartTime] = useState<Date>(new Date());
 
   useEffect(() => {
     refreshFeed();
   }, []);
+
+  useEffect(() => {
+    // Reset timer when articles change
+    setArticleStartTime(new Date());
+  }, [state.articles]);
 
   const handleSwiped = async (index: number) => {
     if (state.articles[index]) {
       const article = state.articles[index];
       markAsRead(article.id);
       
-      // Track reading analytics (estimate 2-3 minutes reading time)
-      const estimatedReadingTime = Math.floor(Math.random() * 2) + 2;
-      await trackArticleRead(article.id, article.category, article.source_id, estimatedReadingTime);
+      // Calculate actual time spent on article
+      const timeSpent = (new Date().getTime() - articleStartTime.getTime()) / 1000; // in seconds
+      const readingTimeMinutes = Math.max(1, Math.round(timeSpent / 60)); // minimum 1 minute
+      
+      await trackArticleRead(article.id, article.category, article.source_id, readingTimeMinutes);
+      
+      // Reset timer for next article
+      setArticleStartTime(new Date());
+    }
+  };
+
+  const handleSwipedTop = async (index: number) => {
+    // User swiped up - save for later
+    if (state.articles[index]) {
+      const article = state.articles[index];
+      toggleSaveArticle(article.id);
+      await trackSwipeAction('up', article.id, article.category);
+      await trackArticleSaved(article.id, article.category, article.source_id);
+    }
+  };
+
+  const handleSwipedBottom = async (index: number) => {
+    // User swiped down - skip/next article
+    if (state.articles[index]) {
+      const article = state.articles[index];
+      await trackSwipeAction('down', article.id, article.category);
+      await trackArticleSkipped(article.id, article.category, article.source_id);
     }
   };
 
@@ -145,12 +175,18 @@ export default function HomeScreen() {
           />
         )}
         onSwiped={handleSwiped}
-        onSwipedAll={() => console.log('Swiped all cards')}
+        onSwipedTop={handleSwipedTop}
+        onSwipedBottom={handleSwipedBottom}
+        onSwipedAll={() => {
+          console.log('Swiped all cards');
+          // Automatically refresh feed when all cards are swiped
+          refreshFeed();
+        }}
         cardIndex={0}
         backgroundColor={theme.colors.background}
         stackSize={2}
         stackSeparation={10}
-        animateOverlayLabelsOpacity={false}
+        animateOverlayLabelsOpacity={true}
         animateCardOpacity={false}
         swipeBackCard={false}
         disableLeftSwipe={true}
@@ -170,7 +206,7 @@ export default function HomeScreen() {
         inputRotationRange={[-50, 0, 50]}
         overlayLabels={{
           top: {
-            title: 'READ LATER',
+            title: 'SAVED FOR LATER',
             style: {
               label: {
                 backgroundColor: '#4CAF50',
@@ -188,7 +224,7 @@ export default function HomeScreen() {
             }
           },
           bottom: {
-            title: 'NEXT',
+            title: 'NOT INTERESTED',
             style: {
               label: {
                 backgroundColor: '#FF5722',

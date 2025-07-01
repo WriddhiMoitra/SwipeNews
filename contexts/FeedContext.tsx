@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect, useState } from 'react';
 import { Article } from '../types/Article';
 import { fetchArticles } from '../services/newsService';
+import { PersonalizedNewsService } from '../services/personalizedNewsService';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
@@ -84,6 +85,7 @@ export const FeedProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [state, dispatch] = useReducer(feedReducer, initialState);
   const [userRegion, setUserRegion] = useState<string>('india');
   const [userLanguage, setUserLanguage] = useState<string>('en');
+  const [personalizedNewsService] = useState(() => PersonalizedNewsService.getInstance());
 
   useEffect(() => {
     const fetchUserPreferences = async () => {
@@ -105,9 +107,47 @@ export const FeedProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const refreshFeed = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const articles = await fetchArticles(userLanguage, userRegion, state.currentCategory ?? undefined);
+      const auth = getAuth();
+      const user = auth.currentUser;
+      let articles: Article[] = [];
+
+      if (user && !user.isAnonymous) {
+        // Use personalized feed for authenticated users
+        if (state.currentCategory) {
+          // If specific category is selected, fetch that category with personalization
+          articles = await personalizedNewsService.fetchPersonalizedArticles(
+            user.uid,
+            userLanguage,
+            userRegion,
+            state.currentCategory,
+            50
+          );
+        } else {
+          // Fetch fully personalized feed
+          articles = await personalizedNewsService.fetchPersonalizedArticles(
+            user.uid,
+            userLanguage,
+            userRegion,
+            undefined,
+            50
+          );
+        }
+      } else {
+        // For anonymous users or when personalization fails, use balanced feed
+        if (state.currentCategory) {
+          articles = await fetchArticles(userLanguage, userRegion, state.currentCategory);
+        } else {
+          articles = await personalizedNewsService.fetchBalancedFeedForNewUser(
+            userLanguage,
+            userRegion,
+            30
+          );
+        }
+      }
+
       dispatch({ type: 'SET_ARTICLES', payload: articles });
     } catch (err) {
+      console.error('Error refreshing feed:', err);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load articles' });
     }
   };
