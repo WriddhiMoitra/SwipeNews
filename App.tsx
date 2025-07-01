@@ -1,20 +1,52 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/Feather';
+import { AuthProvider } from './contexts/AuthContext';
+import { FeedProvider } from './contexts/FeedContext';
+import HomeScreen from './app/(tabs)/index';
+import SavedScreen from './app/(tabs)/saved';
+import SourcesScreen from './app/(tabs)/sources';
+import ProfileScreen from './app/(tabs)/profile';
+
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <FeedProvider>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              tabBarIcon: ({ focused, color, size }) => {
+                let iconName: string;
+
+                if (route.name === 'Home') {
+                  iconName = focused ? 'home' : 'home';
+                } else if (route.name === 'Saved') {
+                  iconName = focused ? 'bookmark' : 'bookmark';
+                } else if (route.name === 'Sources') {
+                  iconName = focused ? 'rss' : 'rss';
+                } else {
+                  iconName = focused ? 'user' : 'user';
+                }
+
+                return <Icon name={iconName} size={size} color={color} />;
+              },
+              tabBarActiveTintColor: '#E50914',
+              tabBarInactiveTintColor: 'gray',
+              headerShown: false,
+            })}
+          >
+            <Tab.Screen name="Home" component={HomeScreen} />
+            <Tab.Screen name="Saved" component={SavedScreen} />
+            <Tab.Screen name="Sources" component={SourcesScreen} />
+            <Tab.Screen name="Profile" component={ProfileScreen} />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </FeedProvider>
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
