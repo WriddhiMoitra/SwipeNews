@@ -1,7 +1,9 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+import { getAnalytics, isSupported } from "firebase/analytics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -17,7 +19,18 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Conditionally initialize Analytics if supported
+isSupported().then((supported) => {
+  if (supported) {
+    getAnalytics(app);
+  }
+});
+
+// Initialize Firestore
 const db = getFirestore(app);
 
-export { db };
+// Initialize Auth
+const auth = getAuth(app);
+
+export { db, auth };

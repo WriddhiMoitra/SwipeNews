@@ -1,8 +1,51 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { useAuth } from '../../contexts/AuthContext';
+import { getAuth, signOut } from 'firebase/auth';
 
 export default function ProfileScreen() {
+  const { user } = useAuth();
+  const [userName, setUserName] = useState('User Name');
+  const [userEmail, setUserEmail] = useState('user@example.com');
+
+  useEffect(() => {
+    if (user) {
+      setUserName(user.name || 'User Name');
+      setUserEmail(user.email || 'user@example.com');
+    }
+  }, [user]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(getAuth());
+      Alert.alert('Logged Out', 'You have been successfully logged out.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to log out. Please try again.');
+      console.error('Logout error:', error);
+    }
+  };
+
+  const handleEditProfile = () => {
+    // Placeholder for edit profile functionality
+    Alert.alert('Edit Profile', 'This feature is under development.');
+  };
+
+  const handleSettings = () => {
+    // Placeholder for settings functionality
+    Alert.alert('Settings', 'This feature is under development.');
+  };
+
+  const handleNotifications = () => {
+    // Placeholder for notifications functionality
+    Alert.alert('Notifications', 'This feature is under development.');
+  };
+
+  const handleHelpSupport = () => {
+    // Placeholder for help & support functionality
+    Alert.alert('Help & Support', 'This feature is under development.');
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -15,8 +58,8 @@ export default function ProfileScreen() {
             style={styles.profileImage}
           />
         </View>
-        <Text style={styles.userName}>User Name</Text>
-        <Text style={styles.userEmail}>user@example.com</Text>
+        <Text style={styles.userName}>{userName}</Text>
+        <Text style={styles.userEmail}>{userEmail}</Text>
       </View>
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
@@ -29,27 +72,27 @@ export default function ProfileScreen() {
         </View>
       </View>
       <View style={styles.optionsContainer}>
-        <TouchableOpacity style={styles.optionItem}>
+        <TouchableOpacity style={styles.optionItem} onPress={handleEditProfile}>
           <Icon name="user" size={24} color="#1a1a1a" />
           <Text style={styles.optionText}>Edit Profile</Text>
           <Icon name="chevron-right" size={24} color="#a0a0a0" style={styles.optionIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem}>
+        <TouchableOpacity style={styles.optionItem} onPress={handleSettings}>
           <Icon name="settings" size={24} color="#1a1a1a" />
           <Text style={styles.optionText}>Settings</Text>
           <Icon name="chevron-right" size={24} color="#a0a0a0" style={styles.optionIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem}>
+        <TouchableOpacity style={styles.optionItem} onPress={handleNotifications}>
           <Icon name="bell" size={24} color="#1a1a1a" />
           <Text style={styles.optionText}>Notifications</Text>
           <Icon name="chevron-right" size={24} color="#a0a0a0" style={styles.optionIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem}>
+        <TouchableOpacity style={styles.optionItem} onPress={handleHelpSupport}>
           <Icon name="help-circle" size={24} color="#1a1a1a" />
           <Text style={styles.optionText}>Help & Support</Text>
           <Icon name="chevron-right" size={24} color="#a0a0a0" style={styles.optionIcon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem}>
+        <TouchableOpacity style={styles.optionItem} onPress={handleLogout}>
           <Icon name="log-out" size={24} color="#E50914" />
           <Text style={[styles.optionText, { color: '#E50914' }]}>Logout</Text>
           <Icon name="chevron-right" size={24} color="#E50914" style={styles.optionIcon} />

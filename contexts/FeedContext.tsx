@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect, useState } from 'react';
 import { Article } from '../types/Article';
 import { fetchArticles } from '../services/newsService';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 type FeedState = {
   articles: Article[];
@@ -80,11 +82,30 @@ const FeedContext = createContext<FeedContextType>({
 
 export const FeedProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(feedReducer, initialState);
+  const [userRegion, setUserRegion] = useState<string>('india');
+  const [userLanguage, setUserLanguage] = useState<string>('en');
+
+  useEffect(() => {
+    const fetchUserPreferences = async () => {
+      const auth = getAuth();
+      const db = getFirestore();
+      const user = auth.currentUser;
+      if (user) {
+        const userPrefDoc = await getDoc(doc(db, 'userPreferences', user.uid));
+        if (userPrefDoc.exists()) {
+          const data = userPrefDoc.data();
+          setUserRegion(data.region || 'india');
+          setUserLanguage(data.language || 'en');
+        }
+      }
+    };
+    fetchUserPreferences();
+  }, []);
 
   const refreshFeed = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const articles = await fetchArticles('en', 'india', state.currentCategory ?? undefined);
+      const articles = await fetchArticles(userLanguage, userRegion, state.currentCategory ?? undefined);
       dispatch({ type: 'SET_ARTICLES', payload: articles });
     } catch (err) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load articles' });
