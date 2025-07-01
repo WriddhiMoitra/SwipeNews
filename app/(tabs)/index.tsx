@@ -1,65 +1,119 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, SafeAreaView } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { useFeed } from '../../contexts/FeedContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useAnalytics } from '../../contexts/AnalyticsContext';
 import NewsCard from '../../components/NewsCard';
 
 const { height } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { state, refreshFeed, markAsRead, toggleSaveArticle } = useFeed();
+  const { theme } = useTheme();
+  const { trackArticleRead, trackArticleSaved, trackArticleShared } = useAnalytics();
 
   useEffect(() => {
     refreshFeed();
   }, []);
 
-  const handleSwiped = (index: number) => {
+  const handleSwiped = async (index: number) => {
     if (state.articles[index]) {
-      markAsRead(state.articles[index].id);
+      const article = state.articles[index];
+      markAsRead(article.id);
+      
+      // Track reading analytics (estimate 2-3 minutes reading time)
+      const estimatedReadingTime = Math.floor(Math.random() * 2) + 2;
+      await trackArticleRead(article.id, article.category, article.source_id, estimatedReadingTime);
     }
   };
 
-  const handleSave = (articleId: string) => {
-    toggleSaveArticle(articleId);
+  const handleSave = async (articleId: string) => {
+    const article = state.articles.find(a => a.id === articleId);
+    if (article) {
+      toggleSaveArticle(articleId);
+      await trackArticleSaved(articleId, article.category, article.source_id);
+    }
   };
 
-  const handleShare = (url: string) => {
+  const handleShare = async (url: string) => {
+    const article = state.articles.find(a => a.url === url);
+    if (article) {
+      await trackArticleShared(article.id, article.category, article.source_id);
+    }
     // Placeholder for share functionality
     console.log('Sharing article:', url);
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    swiperContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      fontSize: 18,
+      color: theme.colors.text,
+      fontWeight: '600',
+    },
+    errorText: {
+      fontSize: 18,
+      color: theme.colors.error,
+      marginBottom: 10,
+      fontWeight: '600',
+    },
+    emptyText: {
+      fontSize: 18,
+      color: theme.colors.text,
+      marginBottom: 10,
+      fontWeight: '600',
+    },
+    retryText: {
+      fontSize: 16,
+      color: theme.colors.primary,
+      textDecorationLine: 'underline',
+      fontWeight: '600',
+    },
+  });
+
   if (state.isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={styles.loadingText}>Loading articles...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (state.error) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={styles.errorText}>{state.error}</Text>
         <Text style={styles.retryText} onPress={refreshFeed}>
           Retry
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (state.articles.length === 0) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={styles.emptyText}>No articles available.</Text>
         <Text style={styles.retryText} onPress={refreshFeed}>
           Refresh
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Swiper
         cards={state.articles}
         renderCard={(article) => (
@@ -72,7 +126,7 @@ export default function HomeScreen() {
         onSwiped={handleSwiped}
         onSwipedAll={() => console.log('Swiped all cards')}
         cardIndex={0}
-        backgroundColor={'#000000'}
+        backgroundColor={theme.colors.background}
         stackSize={2}
         stackSeparation={10}
         animateOverlayLabelsOpacity={false}
@@ -132,43 +186,6 @@ export default function HomeScreen() {
           }
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  swiperContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#FF5722',
-    marginBottom: 10,
-    fontWeight: '600',
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#ffffff',
-    marginBottom: 10,
-    fontWeight: '600',
-  },
-  retryText: {
-    fontSize: 16,
-    color: '#FF5722',
-    textDecorationLine: 'underline',
-    fontWeight: '600',
-  },
-});

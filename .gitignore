@@ -35,3 +35,7 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Personal files
+GOOGLE_SIGNIN_SETUP.md
+INSTALLATION.md

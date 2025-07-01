@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signInAnonymously } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signInAnonymously, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { googleOAuthConfig, exchangeGoogleCodeForToken } from '../config/googleSignIn';
 
 export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,6 +12,39 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Configure WebBrowser for authentication
+  WebBrowser.maybeCompleteAuthSession();
+
+  // Setup Google Sign-In using expo-auth-session hook
+  const redirectUri = AuthSession.makeRedirectUri();
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: googleOAuthConfig.clientId,
+      scopes: googleOAuthConfig.scopes,
+      redirectUri: redirectUri,
+      responseType: googleOAuthConfig.responseType,
+      extraParams: googleOAuthConfig.extraParams,
+    },
+    {
+      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenEndpoint: 'https://oauth2.googleapis.com/token',
+      revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+    }
+  );
+
+  // Handle response from Google Sign-In
+  useEffect(() => {
+    if (response?.type === 'success' && response.params.code) {
+      handleGoogleSignInResponse(response.params.code);
+    } else if (response?.type === 'error') {
+      setIsLoading(false);
+      Alert.alert('Error', 'Google Sign-In failed. Please try again.');
+    } else if (response?.type === 'cancel') {
+      setIsLoading(false);
+      console.log('Google Sign-In cancelled');
+    }
+  }, [response]);
 
   const handleAuth = async () => {
     if (!email || !password) {
@@ -43,23 +79,31 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
     }
   };
 
-  // Temporarily disabled due to native module integration issues
-  // const handleGoogleSignIn = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     await GoogleSignin.hasPlayServices();
-  //     const userInfo = await GoogleSignin.signIn();
-  //     const googleCredential = GoogleAuthProvider.credential(userInfo.idToken);
-  //     const auth = getAuth();
-  //     await signInWithCredential(auth, googleCredential);
-  //     Alert.alert('Success', 'Logged in with Google successfully!');
-  //     onAuthSuccess();
-  //   } catch (error: any) {
-  //     Alert.alert('Error', error.message || 'Google Sign-In failed. Please try again.');
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await promptAsync();
+    } catch (error: any) {
+      console.error('Google Sign-In error:', error);
+      Alert.alert('Error', error.message || 'Google Sign-In failed. Please try again.');
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignInResponse = async (code: string) => {
+    try {
+      const googleCredential = await exchangeGoogleCodeForToken(code, redirectUri, request?.codeVerifier || '');
+      const auth = getAuth();
+      await signInWithCredential(auth, googleCredential);
+      Alert.alert('Success', 'Logged in with Google successfully!');
+      onAuthSuccess();
+    } catch (error: any) {
+      console.error('Google Sign-In error:', error);
+      Alert.alert('Error', error.message || 'Google Sign-In failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAnonymousSignIn = async () => {
     setIsLoading(true);
@@ -83,15 +127,13 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.logoContainer}>
-        <Image
-          source={require('../assets/icon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <View style={styles.logoPlaceholder}>
+          <Icon name="globe" size={50} color="#E50914" />
+        </View>
         <Text style={styles.title}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
-        <Text style={styles.subtitle}>{isLogin ? 'Login to continue' : 'Sign up to get started'}</Text>
+        <Text style={styles.subtitle}>{isLogin ? 'Login to continue reading news' : 'Sign up to get personalized news'}</Text>
       </View>
       <View style={styles.formContainer}>
         {!isLogin && (
@@ -144,15 +186,16 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
           <Text style={styles.dividerText}>OR</Text>
           <View style={styles.dividerLine} />
         </View>
-        {/* Temporarily disabled due to native module integration issues */}
-        {/* <TouchableOpacity
-          style={[styles.providerButton, isLoading && styles.buttonDisabled]}
+        <TouchableOpacity
+          style={[styles.googleButton, isLoading && styles.buttonDisabled]}
           onPress={handleGoogleSignIn}
           disabled={isLoading}
         >
-          <Icon name="google" size={20} color="#4285F4" style={styles.providerIcon} />
-          <Text style={styles.providerButtonText}>Sign in with Google</Text>
-        </TouchableOpacity> */}
+          <View style={styles.googleIcon}>
+            <Text style={styles.googleIconText}>G</Text>
+          </View>
+          <Text style={styles.googleButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.providerButton, isLoading && styles.buttonDisabled]}
           onPress={handleAnonymousSignIn}
@@ -162,7 +205,7 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
           <Text style={styles.providerButtonText}>Sign in Anonymously</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -170,17 +213,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 30,
+    paddingVertical: 50,
   },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
   },
-  logo: {
+  logoPlaceholder: {
     width: 100,
     height: 100,
+    borderRadius: 50,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#E50914',
   },
   title: {
     fontSize: 28,
@@ -269,6 +322,44 @@ const styles = StyleSheet.create({
   },
   providerButtonText: {
     color: '#1a1a1a',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#dadce0',
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  googleIconText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  googleButtonText: {
+    color: '#3c4043',
     fontSize: 16,
     fontWeight: '500',
   },

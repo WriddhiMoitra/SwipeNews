@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { Article } from '../types/Article';
 import { useFeed } from '../contexts/FeedContext';
+import { useTheme } from '../contexts/ThemeContext';
 import Icon from 'react-native-vector-icons/Feather';
 
 interface NewsCardProps {
@@ -14,6 +15,7 @@ const { width, height } = Dimensions.get('window');
 
 const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
   const { state } = useFeed();
+  const { theme } = useTheme();
   const isArticleSaved = state.savedArticles.includes(article.id);
   
   const formatTimeAgo = (date: Date) => {
@@ -36,6 +38,169 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
     const seed = article.title.replace(/\s+/g, '+');
     return `https://picsum.photos/400/250?random=${article.id}`;
   };
+
+  const styles = StyleSheet.create({
+    cardContainer: {
+      backgroundColor: theme.colors.card,
+      borderRadius: 20,
+      overflow: 'hidden',
+      elevation: 8,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      margin: 0,
+      height: height - 140,
+      width: width - 32,
+      flexDirection: 'column',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 10,
+    },
+    sourceContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sourceDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.colors.primary,
+      marginRight: 8,
+    },
+    sourceText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.primary,
+      letterSpacing: 1,
+    },
+    timeText: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      fontWeight: '500',
+    },
+    contentScrollView: {
+      flex: 1,
+    },
+    imageContainer: {
+      height: 200,
+      marginHorizontal: 20,
+      borderRadius: 12,
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    articleImage: {
+      width: '100%',
+      height: '100%',
+    },
+    imageOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 60,
+      backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    contentContainer: {
+      padding: 20,
+      flex: 1,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: '800',
+      marginBottom: 12,
+      color: theme.colors.text,
+      lineHeight: 28,
+      letterSpacing: -0.5,
+    },
+    description: {
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+      marginBottom: 20,
+      lineHeight: 24,
+      fontWeight: '400',
+    },
+    categoryContainer: {
+      alignSelf: 'flex-start',
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      marginTop: 10,
+    },
+    categoryText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: theme.colors.primary,
+      letterSpacing: 1,
+    },
+    actionContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      backgroundColor: theme.colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+    },
+    actionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surfaceVariant,
+      minWidth: 80,
+    },
+    saveButton: {
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    shareButton: {
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    readMoreButton: {
+      backgroundColor: theme.colors.primary,
+    },
+    actionIcon: {
+      marginRight: 6,
+    },
+    actionText: {
+      fontSize: 12,
+      color: theme.colors.text,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+    },
+    savedText: {
+      color: theme.colors.primary,
+    },
+    swipeIndicator: {
+      alignItems: 'center',
+      paddingVertical: 12,
+      backgroundColor: theme.colors.surface,
+    },
+    swipeBar: {
+      width: 40,
+      height: 4,
+      backgroundColor: theme.colors.outline,
+      borderRadius: 2,
+      marginBottom: 6,
+    },
+    swipeText: {
+      fontSize: 10,
+      color: theme.colors.textSecondary,
+      fontWeight: '500',
+      letterSpacing: 0.5,
+    },
+  });
 
   return (
     <View style={styles.cardContainer}>
@@ -82,7 +247,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
           <Icon
             name={isArticleSaved ? 'bookmark' : 'bookmark'}
             size={20}
-            color={isArticleSaved ? '#FF5722' : '#ffffff'}
+            color={isArticleSaved ? theme.colors.primary : theme.colors.text}
             style={styles.actionIcon}
           />
           <Text style={[styles.actionText, isArticleSaved && styles.savedText]}>
@@ -95,7 +260,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
           onPress={() => onShare(article.url)}
           activeOpacity={0.7}
         >
-          <Icon name="share-2" size={20} color="#ffffff" style={styles.actionIcon} />
+          <Icon name="share-2" size={20} color={theme.colors.text} style={styles.actionIcon} />
           <Text style={styles.actionText}>Share</Text>
         </TouchableOpacity>
 
@@ -104,7 +269,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
           activeOpacity={0.7}
         >
           <Icon name="external-link" size={20} color="#ffffff" style={styles.actionIcon} />
-          <Text style={styles.actionText}>Read More</Text>
+          <Text style={[styles.actionText, { color: '#ffffff' }]}>Read More</Text>
         </TouchableOpacity>
       </View>
 
@@ -116,168 +281,5 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  cardContainer: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    margin: 0,
-    height: height - 140,
-    width: width - 32,
-    flexDirection: 'column',
-    borderWidth: 1,
-    borderColor: '#333333',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  sourceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sourceDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF5722',
-    marginRight: 8,
-  },
-  sourceText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FF5722',
-    letterSpacing: 1,
-  },
-  timeText: {
-    fontSize: 12,
-    color: '#888888',
-    fontWeight: '500',
-  },
-  contentScrollView: {
-    flex: 1,
-  },
-  imageContainer: {
-    height: 200,
-    marginHorizontal: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  articleImage: {
-    width: '100%',
-    height: '100%',
-  },
-  imageOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-  },
-  contentContainer: {
-    padding: 20,
-    flex: 1,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 12,
-    color: '#ffffff',
-    lineHeight: 28,
-    letterSpacing: -0.5,
-  },
-  description: {
-    fontSize: 16,
-    color: '#cccccc',
-    marginBottom: 20,
-    lineHeight: 24,
-    fontWeight: '400',
-  },
-  categoryContainer: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#333333',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginTop: 10,
-  },
-  categoryText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#FF5722',
-    letterSpacing: 1,
-  },
-  actionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#2a2a2a',
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#333333',
-    minWidth: 80,
-  },
-  saveButton: {
-    backgroundColor: '#333333',
-  },
-  shareButton: {
-    backgroundColor: '#333333',
-  },
-  readMoreButton: {
-    backgroundColor: '#FF5722',
-  },
-  actionIcon: {
-    marginRight: 6,
-  },
-  actionText: {
-    fontSize: 12,
-    color: '#ffffff',
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  savedText: {
-    color: '#FF5722',
-  },
-  swipeIndicator: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    backgroundColor: '#2a2a2a',
-  },
-  swipeBar: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#555555',
-    borderRadius: 2,
-    marginBottom: 6,
-  },
-  swipeText: {
-    fontSize: 10,
-    color: '#888888',
-    fontWeight: '500',
-    letterSpacing: 0.5,
-  },
-});
 
 export default NewsCard;

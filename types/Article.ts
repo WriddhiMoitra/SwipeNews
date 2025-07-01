@@ -11,4 +11,9 @@ export interface Article {
   read: boolean;
   saved: boolean;
   created_at: Date;
+  imageUrl?: string;
+  keywords?: string[];
+  engagementScore?: number;
+  offline?: boolean;
+  downloadedAt?: Date;
 }
