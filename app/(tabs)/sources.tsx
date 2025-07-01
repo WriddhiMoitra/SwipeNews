@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { 
   fetchNewsSources, 
   getSourcesGroupedByCategory, 
@@ -21,6 +22,7 @@ interface UserPreferences {
 
 export default function SourcesScreen() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [groupedSources, setGroupedSources] = useState<{ [category: string]: NewsSource[] }>({});
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
@@ -149,14 +151,14 @@ export default function SourcesScreen() {
           </View>
           {isUserSelected && (
             <View style={styles.selectedIndicator}>
-              <Icon name="check-circle" size={20} color="#4CAF50" />
+              <Icon name="check-circle" size={20} color={theme.colors.success} />
             </View>
           )}
         </View>
         
         {item.region && (
           <View style={styles.regionContainer}>
-            <Icon name="map-pin" size={12} color="#666" />
+            <Icon name="map-pin" size={12} color={theme.colors.textSecondary} />
             <Text style={styles.regionText}>{item.region}</Text>
           </View>
         )}
@@ -180,10 +182,209 @@ export default function SourcesScreen() {
     ...NEWS_CATEGORIES
   ];
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+    },
+    header: {
+      paddingTop: 50,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+      backgroundColor: theme.colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    headerText: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: theme.colors.text,
+      marginBottom: 4,
+    },
+    headerSubtext: {
+      fontSize: 14,
+      color: theme.colors.textSecondary,
+    },
+    categoryContainer: {
+      backgroundColor: theme.colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    categoryList: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    categoryTab: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      marginRight: 12,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.card,
+    },
+    selectedCategoryTab: {
+      borderColor: 'transparent',
+      backgroundColor: theme.colors.primary,
+    },
+    categoryTabText: {
+      marginLeft: 6,
+      fontSize: 14,
+      fontWeight: '500',
+      color: theme.colors.text,
+    },
+    selectedCategoryTabText: {
+      color: '#fff',
+    },
+    sourcesList: {
+      padding: 16,
+    },
+    sourceItem: {
+      backgroundColor: theme.colors.card,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    sourceHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 8,
+    },
+    sourceInfo: {
+      flex: 1,
+    },
+    sourceName: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.text,
+      marginBottom: 6,
+    },
+    sourceMetadata: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+    },
+    categoryBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      marginRight: 8,
+      marginBottom: 4,
+      backgroundColor: theme.colors.primary,
+    },
+    categoryBadgeText: {
+      marginLeft: 4,
+      fontSize: 12,
+      fontWeight: '500',
+      color: '#fff',
+    },
+    sourceLanguage: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: theme.colors.textSecondary,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginRight: 8,
+      marginBottom: 4,
+    },
+    sourceCountry: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      textTransform: 'capitalize',
+    },
+    selectedIndicator: {
+      marginLeft: 12,
+    },
+    regionContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    regionText: {
+      marginLeft: 4,
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      textTransform: 'capitalize',
+    },
+    sourceUrl: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      marginBottom: 12,
+      fontFamily: 'monospace',
+    },
+    sourceFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    lastSynced: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+    },
+    statusIndicator: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      backgroundColor: theme.colors.success,
+    },
+    statusText: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: '#fff',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 60,
+    },
+    emptyText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.textSecondary,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: 40,
+    },
+  });
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Icon name="loader" size={40} color="#E50914" />
+        <Icon name="loader" size={40} color={theme.colors.primary} />
         <Text style={styles.loadingText}>Loading news sources...</Text>
       </View>
     );
@@ -240,196 +441,3 @@ export default function SourcesScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 4,
-  },
-  headerSubtext: {
-    fontSize: 14,
-    color: '#666',
-  },
-  categoryContainer: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  categoryList: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  categoryTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    backgroundColor: '#fff',
-  },
-  selectedCategoryTab: {
-    borderColor: 'transparent',
-  },
-  categoryTabText: {
-    marginLeft: 6,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  selectedCategoryTabText: {
-    color: '#fff',
-  },
-  sourcesList: {
-    padding: 16,
-  },
-  sourceItem: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  sourceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  sourceInfo: {
-    flex: 1,
-  },
-  sourceName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: 6,
-  },
-  sourceMetadata: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  categoryBadgeText: {
-    marginLeft: 4,
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#fff',
-  },
-  sourceLanguage: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#666',
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  sourceCountry: {
-    fontSize: 12,
-    color: '#666',
-    textTransform: 'capitalize',
-  },
-  selectedIndicator: {
-    marginLeft: 12,
-  },
-  regionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  regionText: {
-    marginLeft: 4,
-    fontSize: 12,
-    color: '#666',
-    textTransform: 'capitalize',
-  },
-  sourceUrl: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 12,
-    fontFamily: 'monospace',
-  },
-  sourceFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  lastSynced: {
-    fontSize: 12,
-    color: '#999',
-  },
-  statusIndicator: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#fff',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    paddingHorizontal: 40,
-  },
-});

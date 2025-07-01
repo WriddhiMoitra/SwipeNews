@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, SafeAreaView } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { useFeed } from '../../contexts/FeedContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAnalytics } from '../../contexts/AnalyticsContext';
 import NewsCard from '../../components/NewsCard';
+import ArticleDetailScreen from '../../screens/ArticleDetailScreen';
+import { Article } from '../../types/Article';
 
 const { height } = Dimensions.get('window');
 
@@ -12,6 +14,7 @@ export default function HomeScreen() {
   const { state, refreshFeed, markAsRead, toggleSaveArticle } = useFeed();
   const { theme } = useTheme();
   const { trackArticleRead, trackArticleSaved, trackArticleShared } = useAnalytics();
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   useEffect(() => {
     refreshFeed();
@@ -41,8 +44,15 @@ export default function HomeScreen() {
     if (article) {
       await trackArticleShared(article.id, article.category, article.source_id);
     }
-    // Placeholder for share functionality
-    console.log('Sharing article:', url);
+    // Share functionality is now handled in NewsCard component
+  };
+
+  const handleReadMore = (article: Article) => {
+    setSelectedArticle(article);
+  };
+
+  const handleBackFromDetail = () => {
+    setSelectedArticle(null);
   };
 
   const styles = StyleSheet.create({
@@ -81,6 +91,16 @@ export default function HomeScreen() {
       fontWeight: '600',
     },
   });
+
+  // Show article detail screen if an article is selected
+  if (selectedArticle) {
+    return (
+      <ArticleDetailScreen
+        article={selectedArticle}
+        onBack={handleBackFromDetail}
+      />
+    );
+  }
 
   if (state.isLoading) {
     return (
@@ -121,6 +141,7 @@ export default function HomeScreen() {
             article={article}
             onSave={handleSave}
             onShare={handleShare}
+            onReadMore={handleReadMore}
           />
         )}
         onSwiped={handleSwiped}

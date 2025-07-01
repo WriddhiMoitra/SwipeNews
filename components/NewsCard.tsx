@@ -1,21 +1,24 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Share, Alert } from 'react-native';
 import { Article } from '../types/Article';
 import { useFeed } from '../contexts/FeedContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import Icon from 'react-native-vector-icons/Feather';
 
 interface NewsCardProps {
   article: Article;
   onSave: (articleId: string) => void;
   onShare: (articleUrl: string) => void;
+  onReadMore?: (article: Article) => void;
 }
 
 const { width, height } = Dimensions.get('window');
 
-const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
+const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMore }) => {
   const { state } = useFeed();
   const { theme } = useTheme();
+  const { trackArticleShared } = useAnalytics();
   const isArticleSaved = state.savedArticles.includes(article.id);
   
   const formatTimeAgo = (date: Date) => {
@@ -37,6 +40,30 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
   const getPlaceholderImage = () => {
     const seed = article.title.replace(/\s+/g, '+');
     return `https://picsum.photos/400/250?random=${article.id}`;
+  };
+
+  const handleShare = async () => {
+    try {
+      const result = await Share.share({
+        message: `${article.title}\n\n${article.description}\n\nRead more: ${article.url}`,
+        url: article.url,
+        title: article.title,
+      });
+
+      if (result.action === Share.sharedAction) {
+        await trackArticleShared(article.id, article.category, article.source_id);
+        onShare(article.url);
+      }
+    } catch (error) {
+      console.error('Error sharing article:', error);
+      Alert.alert('Error', 'Failed to share article');
+    }
+  };
+
+  const handleReadMore = () => {
+    if (onReadMore) {
+      onReadMore(article);
+    }
   };
 
   const styles = StyleSheet.create({
@@ -257,7 +284,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
 
         <TouchableOpacity
           style={[styles.actionButton, styles.shareButton]}
-          onPress={() => onShare(article.url)}
+          onPress={handleShare}
           activeOpacity={0.7}
         >
           <Icon name="share-2" size={20} color={theme.colors.text} style={styles.actionIcon} />
@@ -266,6 +293,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare }) => {
 
         <TouchableOpacity
           style={[styles.actionButton, styles.readMoreButton]}
+          onPress={handleReadMore}
           activeOpacity={0.7}
         >
           <Icon name="external-link" size={20} color="#ffffff" style={styles.actionIcon} />

@@ -39,3 +39,5 @@ yarn-error.*
 # Personal files
 GOOGLE_SIGNIN_SETUP.md
 INSTALLATION.md
+test_implementation.md
+test_*.md
