@@ -8,9 +8,10 @@ import {
   getSourcesGroupedByCategory, 
   NewsSource, 
   NEWS_CATEGORIES,
-  getCategoryById 
+  getCategoryById,
+  toggleSourceSelection
 } from '../../services/newsSourcesService';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface UserPreferences {
@@ -23,6 +24,24 @@ interface UserPreferences {
 export default function SourcesScreen() {
   const { user } = useAuth();
   const { theme } = useTheme();
+  // Fallback theme in case context is not available
+  const fallbackTheme = {
+    colors: {
+      primary: '#E50914',
+      text: '#1a1a1a',
+      textSecondary: '#666666',
+      background: '#ffffff',
+      card: '#ffffff',
+      border: '#e0e0e0',
+      shadow: '#000000',
+      surface: '#f5f5f5',
+      surfaceVariant: '#f0f0f0',
+      outline: '#cccccc',
+      success: '#4CAF50',
+      error: '#F44336',
+    },
+  };
+  const activeTheme = theme || fallbackTheme;
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [groupedSources, setGroupedSources] = useState<{ [category: string]: NewsSource[] }>({});
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
@@ -59,7 +78,7 @@ export default function SourcesScreen() {
       if (preferences) {
         const grouped = await getSourcesGroupedByCategory(
           preferences.language || 'en',
-          preferences.country || 'india'
+          preferences.country || 'in'
         );
         setGroupedSources(grouped);
         
@@ -77,7 +96,7 @@ export default function SourcesScreen() {
         const grouped = await getSourcesGroupedByCategory();
         setGroupedSources(grouped);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading sources:', error);
       Alert.alert('Error', 'Failed to load news sources. Please try again.');
     } finally {
@@ -101,6 +120,39 @@ export default function SourcesScreen() {
       setSources(allSources);
     } else {
       setSources(groupedSources[categoryId] || []);
+    }
+  };
+
+  const handleSourceToggle = async (sourceId: string) => {
+    try {
+      const isCurrentlySelected = userPreferences?.sources?.includes(sourceId) || false;
+      const newSelectedSources = isCurrentlySelected
+        ? userPreferences?.sources?.filter(id => id !== sourceId) || []
+        : [...(userPreferences?.sources || []), sourceId];
+
+      const updatedPreferences = {
+        ...userPreferences,
+        sources: newSelectedSources,
+        language: userPreferences?.language || 'en',
+        country: userPreferences?.country || 'in',
+        categories: userPreferences?.categories || [],
+      };
+
+      setUserPreferences(updatedPreferences);
+
+      // Save preferences
+      if (user && !user.isAnonymous) {
+        const db = getFirestore();
+        await setDoc(doc(db, 'userPreferences', user.id), updatedPreferences);
+      } else {
+        await AsyncStorage.setItem('userPreferences', JSON.stringify(updatedPreferences));
+      }
+
+      // Call the service function for any additional logic
+      await toggleSourceSelection(sourceId, !isCurrentlySelected);
+    } catch (error) {
+      console.error('Error toggling source selection:', error);
+      Alert.alert('Error', 'Failed to update source selection. Please try again.');
     }
   };
 
@@ -136,7 +188,14 @@ export default function SourcesScreen() {
     const isUserSelected = userPreferences?.sources?.includes(item.id) || false;
     
     return (
-      <View style={styles.sourceItem}>
+      <TouchableOpacity 
+        style={[
+          styles.sourceItem,
+          isUserSelected && styles.selectedSourceItem
+        ]}
+        onPress={() => handleSourceToggle(item.id)}
+        activeOpacity={0.7}
+      >
         <View style={styles.sourceHeader}>
           <View style={styles.sourceInfo}>
             <Text style={styles.sourceName}>{item.name}</Text>
@@ -151,14 +210,14 @@ export default function SourcesScreen() {
           </View>
           {isUserSelected && (
             <View style={styles.selectedIndicator}>
-              <Icon name="check-circle" size={20} color={theme.colors.success} />
+              <Icon name="check-circle" size={20} color={activeTheme.colors.success} />
             </View>
           )}
         </View>
         
         {item.region && (
           <View style={styles.regionContainer}>
-            <Icon name="map-pin" size={12} color={theme.colors.textSecondary} />
+            <Icon name="map-pin" size={12} color={activeTheme.colors.textSecondary} />
             <Text style={styles.regionText}>{item.region}</Text>
           </View>
         )}
@@ -167,13 +226,13 @@ export default function SourcesScreen() {
         
         <View style={styles.sourceFooter}>
           <Text style={styles.lastSynced}>
-            Last synced: {new Date(item.last_synced).toLocaleDateString()}
+            Last synced: {item.last_synced ? new Date(item.last_synced).toLocaleDateString() : 'Never'}
           </Text>
-          <View style={[styles.statusIndicator, { backgroundColor: item.active ? '#4CAF50' : '#F44336' }]}>
-            <Text style={styles.statusText}>{item.active ? 'Active' : 'Inactive'}</Text>
+          <View style={[styles.statusIndicator, { backgroundColor: (item.active ?? true) ? '#4CAF50' : '#F44336' }]}>
+            <Text style={styles.statusText}>{(item.active ?? true) ? 'Active' : 'Inactive'}</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -185,41 +244,41 @@ export default function SourcesScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.colors.background,
+      backgroundColor: activeTheme.colors.background,
     },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: theme.colors.background,
+      backgroundColor: activeTheme.colors.background,
     },
     loadingText: {
       marginTop: 16,
       fontSize: 16,
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
     },
     header: {
       paddingTop: 50,
       paddingBottom: 20,
       paddingHorizontal: 20,
-      backgroundColor: theme.colors.card,
+      backgroundColor: activeTheme.colors.card,
       borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
+      borderBottomColor: activeTheme.colors.border,
     },
     headerText: {
       fontSize: 24,
       fontWeight: '700',
-      color: theme.colors.text,
+      color: activeTheme.colors.text,
       marginBottom: 4,
     },
     headerSubtext: {
       fontSize: 14,
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
     },
     categoryContainer: {
-      backgroundColor: theme.colors.card,
+      backgroundColor: activeTheme.colors.card,
       borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
+      borderBottomColor: activeTheme.colors.border,
     },
     categoryList: {
       paddingHorizontal: 16,
@@ -233,18 +292,18 @@ export default function SourcesScreen() {
       marginRight: 12,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.card,
+      borderColor: activeTheme.colors.border,
+      backgroundColor: activeTheme.colors.card,
     },
     selectedCategoryTab: {
       borderColor: 'transparent',
-      backgroundColor: theme.colors.primary,
+      backgroundColor: activeTheme.colors.primary,
     },
     categoryTabText: {
       marginLeft: 6,
       fontSize: 14,
       fontWeight: '500',
-      color: theme.colors.text,
+      color: activeTheme.colors.text,
     },
     selectedCategoryTabText: {
       color: '#fff',
@@ -253,11 +312,11 @@ export default function SourcesScreen() {
       padding: 16,
     },
     sourceItem: {
-      backgroundColor: theme.colors.card,
+      backgroundColor: activeTheme.colors.card,
       borderRadius: 12,
       padding: 16,
       marginBottom: 12,
-      shadowColor: theme.colors.shadow,
+      shadowColor: activeTheme.colors.shadow,
       shadowOffset: {
         width: 0,
         height: 1,
@@ -266,7 +325,12 @@ export default function SourcesScreen() {
       shadowRadius: 2,
       elevation: 2,
       borderWidth: 1,
-      borderColor: theme.colors.border,
+      borderColor: activeTheme.colors.border,
+    },
+    selectedSourceItem: {
+      borderColor: activeTheme.colors.success,
+      borderWidth: 2,
+      backgroundColor: activeTheme.colors.surface,
     },
     sourceHeader: {
       flexDirection: 'row',
@@ -280,7 +344,7 @@ export default function SourcesScreen() {
     sourceName: {
       fontSize: 18,
       fontWeight: '600',
-      color: theme.colors.text,
+      color: activeTheme.colors.text,
       marginBottom: 6,
     },
     sourceMetadata: {
@@ -296,7 +360,7 @@ export default function SourcesScreen() {
       borderRadius: 12,
       marginRight: 8,
       marginBottom: 4,
-      backgroundColor: theme.colors.primary,
+      backgroundColor: activeTheme.colors.primary,
     },
     categoryBadgeText: {
       marginLeft: 4,
@@ -307,8 +371,8 @@ export default function SourcesScreen() {
     sourceLanguage: {
       fontSize: 12,
       fontWeight: '500',
-      color: theme.colors.textSecondary,
-      backgroundColor: theme.colors.surface,
+      color: activeTheme.colors.textSecondary,
+      backgroundColor: activeTheme.colors.surface,
       paddingHorizontal: 6,
       paddingVertical: 2,
       borderRadius: 4,
@@ -317,7 +381,7 @@ export default function SourcesScreen() {
     },
     sourceCountry: {
       fontSize: 12,
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
       textTransform: 'capitalize',
     },
     selectedIndicator: {
@@ -331,12 +395,12 @@ export default function SourcesScreen() {
     regionText: {
       marginLeft: 4,
       fontSize: 12,
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
       textTransform: 'capitalize',
     },
     sourceUrl: {
       fontSize: 12,
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
       marginBottom: 12,
       fontFamily: 'monospace',
     },
@@ -347,13 +411,13 @@ export default function SourcesScreen() {
     },
     lastSynced: {
       fontSize: 12,
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
     },
     statusIndicator: {
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 12,
-      backgroundColor: theme.colors.success,
+      backgroundColor: activeTheme.colors.success,
     },
     statusText: {
       fontSize: 12,
@@ -369,35 +433,35 @@ export default function SourcesScreen() {
     emptyText: {
       fontSize: 18,
       fontWeight: '600',
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
       marginTop: 16,
       marginBottom: 8,
     },
     emptySubtext: {
       fontSize: 14,
-      color: theme.colors.textSecondary,
+      color: activeTheme.colors.textSecondary,
       textAlign: 'center',
       paddingHorizontal: 40,
     },
   });
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Icon name="loader" size={40} color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading news sources...</Text>
-      </View>
-    );
+      return (
+        <View style={styles.loadingContainer}>
+          <Icon name="loader" size={40} color={activeTheme.colors.primary} />
+          <Text style={styles.loadingText}>Loading news sources...</Text>
+        </View>
+      );
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>News Sources</Text>
-        <Text style={styles.headerSubtext}>
-          {sources.length} sources available
-        </Text>
-      </View>
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>News Sources</Text>
+          <Text style={styles.headerSubtext}>
+            {sources.length} sources available
+          </Text>
+        </View>
 
       {/* Category Tabs */}
       <View style={styles.categoryContainer}>

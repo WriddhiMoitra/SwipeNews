@@ -1,7 +1,17 @@
-/**
- * Root layout for the app
- * This is a placeholder file and will be replaced with actual content later.
- */
+import React from 'react';
+import { Slot } from 'expo-router';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { AuthProvider } from '../contexts/AuthContext';
+import { FeedProvider } from '../contexts/FeedContext';
+
 export default function RootLayout() {
-  return null;
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <FeedProvider>
+          <Slot />
+        </FeedProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }

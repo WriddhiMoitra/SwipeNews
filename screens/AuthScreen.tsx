@@ -5,8 +5,28 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, up
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { googleOAuthConfig, exchangeGoogleCodeForToken } from '../config/googleSignIn';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => void }) {
+  const { theme } = useTheme();
+  // Fallback theme in case context is not available
+  const fallbackTheme = {
+    colors: {
+      primary: '#E50914',
+      text: '#1a1a1a',
+      textSecondary: '#666666',
+      background: '#ffffff',
+      card: '#ffffff',
+      border: '#e0e0e0',
+      shadow: '#000000',
+      surface: '#f5f5f5',
+      surfaceVariant: '#f0f0f0',
+      outline: '#cccccc',
+      success: '#4CAF50',
+      error: '#F44336',
+    },
+  };
+  const activeTheme = theme || fallbackTheme;
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -130,15 +150,15 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.logoContainer}>
         <View style={styles.logoPlaceholder}>
-          <Icon name="globe" size={50} color="#E50914" />
+          <Icon name="globe" size={50} color={activeTheme.colors.primary} />
         </View>
-        <Text style={styles.title}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
-        <Text style={styles.subtitle}>{isLogin ? 'Login to continue reading news' : 'Sign up to get personalized news'}</Text>
+        <Text style={[styles.title, { color: activeTheme.colors.text }]}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
+        <Text style={[styles.subtitle, { color: activeTheme.colors.textSecondary }]}>{isLogin ? 'Login to continue reading news' : 'Sign up to get personalized news'}</Text>
       </View>
       <View style={styles.formContainer}>
         {!isLogin && (
           <View style={styles.inputContainer}>
-            <Icon name="user" size={20} color="#a0a0a0" style={styles.inputIcon} />
+            <Icon name="user" size={20} color={activeTheme.colors.textSecondary} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Full Name"
@@ -149,7 +169,7 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
           </View>
         )}
         <View style={styles.inputContainer}>
-          <Icon name="mail" size={20} color="#a0a0a0" style={styles.inputIcon} />
+          <Icon name="mail" size={20} color={activeTheme.colors.textSecondary} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -160,7 +180,7 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
           />
         </View>
         <View style={styles.inputContainer}>
-          <Icon name="lock" size={20} color="#a0a0a0" style={styles.inputIcon} />
+          <Icon name="lock" size={20} color={activeTheme.colors.textSecondary} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -177,7 +197,7 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
           <Text style={styles.buttonText}>{isLoading ? 'Processing...' : isLogin ? 'Login' : 'Sign Up'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.toggleButton} onPress={toggleMode}>
-          <Text style={styles.toggleText}>
+          <Text style={[styles.toggleText, { color: activeTheme.colors.primary }]}>
             {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
           </Text>
         </TouchableOpacity>
@@ -201,7 +221,7 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
           onPress={handleAnonymousSignIn}
           disabled={isLoading}
         >
-          <Icon name="user" size={20} color="#757575" style={styles.providerIcon} />
+          <Icon name="user" size={20} color={activeTheme.colors.text} style={styles.providerIcon} />
           <Text style={styles.providerButtonText}>Sign in Anonymously</Text>
         </TouchableOpacity>
       </View>
@@ -238,12 +258,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1a1a1a',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#a0a0a0',
   },
   formContainer: {
     width: '100%',
@@ -278,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#cccccc',
   },
   buttonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -287,7 +305,6 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   toggleText: {
-    color: '#E50914',
     fontSize: 16,
     fontWeight: '500',
   },
