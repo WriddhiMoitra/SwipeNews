@@ -4,26 +4,10 @@ import { WebView } from 'react-native-webview';
 import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../contexts/ThemeContext';
 import { Article } from '../types/Article';
+import { fallbackTheme } from '../constants/theme';
 
 export default function ArticleDetailScreen({ article, onBack }: { article: Article; onBack: () => void }) {
   const { theme } = useTheme();
-  // Fallback theme in case context is not available
-  const fallbackTheme = {
-    colors: {
-      primary: '#E50914',
-      text: '#1a1a1a',
-      textSecondary: '#666666',
-      background: '#ffffff',
-      card: '#ffffff',
-      border: '#e0e0e0',
-      shadow: '#000000',
-      surface: '#f5f5f5',
-      surfaceVariant: '#f0f0f0',
-      outline: '#cccccc',
-      success: '#4CAF50',
-      error: '#F44336',
-    },
-  };
   const activeTheme = theme || fallbackTheme;
   const [showWebView, setShowWebView] = React.useState(false);
 
@@ -82,7 +66,12 @@ export default function ArticleDetailScreen({ article, onBack }: { article: Arti
         )}
         <View style={styles.content}>
           <Text style={[styles.title, { color: activeTheme.colors.text }]}>{article.title}</Text>
-          <Text style={[styles.description, { color: activeTheme.colors.textSecondary }]}>{article.description}</Text>
+          {/* Prefer summary if present, fallback to description */}
+          {article.summary ? (
+            <Text style={[styles.description, { color: activeTheme.colors.textSecondary }]}>{article.summary}</Text>
+          ) : (
+            <Text style={[styles.description, { color: activeTheme.colors.textSecondary }]}>{article.description}</Text>
+          )}
           <Text style={[styles.contentText, { color: activeTheme.colors.text }]}>Full content not available in preview. Click "Open Original" to read the full article.</Text>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: activeTheme.colors.primary }]}

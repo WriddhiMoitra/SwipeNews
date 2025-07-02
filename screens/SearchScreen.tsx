@@ -2,26 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../contexts/ThemeContext';
+import { fallbackTheme } from '../constants/theme';
 
 export default function SearchScreen({ onBack }: { onBack: () => void }) {
   const { theme } = useTheme();
-  // Fallback theme in case context is not available
-  const fallbackTheme = {
-    colors: {
-      primary: '#E50914',
-      text: '#1a1a1a',
-      textSecondary: '#666666',
-      background: '#ffffff',
-      card: '#ffffff',
-      border: '#e0e0e0',
-      shadow: '#000000',
-      surface: '#f5f5f5',
-      surfaceVariant: '#f0f0f0',
-      outline: '#cccccc',
-      success: '#4CAF50',
-      error: '#F44336',
-    },
-  };
   const activeTheme = theme || fallbackTheme;
   const [searchQuery, setSearchQuery] = useState('');
 

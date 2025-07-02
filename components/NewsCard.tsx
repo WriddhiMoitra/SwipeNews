@@ -255,8 +255,12 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
         {/* Article Content */}
         <View style={styles.contentContainer}>
           <Text style={styles.title}>{article.title}</Text>
-          <Text style={styles.description}>{article.description}</Text>
-          
+          {/* Prefer summary if present, fallback to description */}
+          {article.summary ? (
+            <Text style={styles.description}>{article.summary}</Text>
+          ) : (
+            <Text style={styles.description}>{article.description}</Text>
+          )}
           {/* Category tag */}
           <View style={styles.categoryContainer}>
             <Text style={styles.categoryText}>{article.category.toUpperCase()}</Text>

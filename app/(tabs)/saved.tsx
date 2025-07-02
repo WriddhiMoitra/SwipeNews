@@ -7,28 +7,12 @@ import Icon from 'react-native-vector-icons/Feather';
 import NewsCard from '../../components/NewsCard';
 import ArticleDetailScreen from '../../screens/ArticleDetailScreen';
 import { Article } from '../../types/Article';
+import { fallbackTheme } from '../../constants/theme';
 
 export default function SavedScreen() {
   const { state, toggleSaveArticle } = useFeed();
   const { theme } = useTheme();
   const { trackArticleShared } = useAnalytics();
-  // Fallback theme in case context is not available
-  const fallbackTheme = {
-    colors: {
-      primary: '#E50914',
-      text: '#1a1a1a',
-      textSecondary: '#666666',
-      background: '#ffffff',
-      card: '#ffffff',
-      border: '#e0e0e0',
-      shadow: '#000000',
-      surface: '#f5f5f5',
-      surfaceVariant: '#f0f0f0',
-      outline: '#cccccc',
-      success: '#4CAF50',
-      error: '#F44336',
-    },
-  };
   const activeTheme = theme || fallbackTheme;
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [searchQuery, setSearchQuery] = useState('');

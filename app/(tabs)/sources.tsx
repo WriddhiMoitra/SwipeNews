@@ -13,6 +13,7 @@ import {
 } from '../../services/newsSourcesService';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fallbackTheme } from '../../constants/theme';
 
 interface UserPreferences {
   language: string;
@@ -24,23 +25,6 @@ interface UserPreferences {
 export default function SourcesScreen() {
   const { user } = useAuth();
   const { theme } = useTheme();
-  // Fallback theme in case context is not available
-  const fallbackTheme = {
-    colors: {
-      primary: '#E50914',
-      text: '#1a1a1a',
-      textSecondary: '#666666',
-      background: '#ffffff',
-      card: '#ffffff',
-      border: '#e0e0e0',
-      shadow: '#000000',
-      surface: '#f5f5f5',
-      surfaceVariant: '#f0f0f0',
-      outline: '#cccccc',
-      success: '#4CAF50',
-      error: '#F44336',
-    },
-  };
   const activeTheme = theme || fallbackTheme;
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [groupedSources, setGroupedSources] = useState<{ [category: string]: NewsSource[] }>({});

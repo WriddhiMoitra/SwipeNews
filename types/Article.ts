@@ -16,4 +16,5 @@ export interface Article {
   engagementScore?: number;
   offline?: boolean;
   downloadedAt?: Date;
+  summary?: string; // Add summary field for Gemini summaries
 }

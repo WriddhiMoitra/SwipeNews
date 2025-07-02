@@ -1,9 +1,7 @@
-import { db } from './firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { Article } from '../types/Article';
 
 /**
- * Fetch articles from Firestore based on specified filters.
+ * Fetch articles from local Node.js backend based on specified filters.
  * @param language - Language of the articles (default: 'en')
  * @param country - Country of the articles (default: 'india')
  * @param category - Category of the articles (optional)
@@ -15,39 +13,17 @@ export const fetchArticles = async (
   category?: string
 ): Promise<Article[]> => {
   try {
-    let q = query(
-      collection(db, 'articles'),
-      where('language', '==', language),
-      where('country', '==', country),
-      orderBy('published_at', 'desc')
-    );
-
-    if (category) {
-      q = query(q, where('category', '==', category));
-    }
-
-    const querySnapshot = await getDocs(q);
-    const articles: Article[] = [];
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      articles.push({
-        id: doc.id,
-        title: data.title,
-        description: data.description,
-        url: data.url,
-        published_at: data.published_at.toDate(),
-        category: data.category,
-        country: data.country,
-        language: data.language,
-        source_id: data.source_id,
-        read: data.read,
-        saved: data.saved,
-        created_at: data.created_at.toDate(),
-      });
-    });
-
-    return articles;
+    const params = new URLSearchParams({ language, country });
+    if (category) params.append('category', category);
+    const res = await fetch(`http://localhost:4000/articles?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch articles');
+    const articles = await res.json();
+    // Convert string dates to Date objects
+    return articles.map((a: any) => ({
+      ...a,
+      published_at: new Date(a.published_at),
+      created_at: new Date(a.created_at),
+    }));
   } catch (error) {
     console.error('Error fetching articles:', error);
     return [];
