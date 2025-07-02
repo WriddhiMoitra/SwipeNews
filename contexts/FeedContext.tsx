@@ -4,6 +4,7 @@ import { fetchArticles } from '../services/newsService';
 import { PersonalizedNewsService } from '../services/personalizedNewsService';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { useTheme } from './ThemeContext';
 
 type FeedState = {
   articles: Article[];
@@ -86,6 +87,7 @@ export const FeedProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userRegion, setUserRegion] = useState<string>('india');
   const [userLanguage, setUserLanguage] = useState<string>('en');
   const [personalizedNewsService] = useState(() => PersonalizedNewsService.getInstance());
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchUserPreferences = async () => {
@@ -166,7 +168,7 @@ export const FeedProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     refreshFeed();
-  }, [state.currentCategory]);
+  }, [state.currentCategory, theme]);
 
   return (
     <FeedContext.Provider value={{ state, dispatch, refreshFeed, setCategory, toggleSaveArticle, markAsRead }}>

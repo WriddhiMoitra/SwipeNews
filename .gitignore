@@ -42,3 +42,5 @@ INSTALLATION.md
 test_implementation.md
 test_*.md
 .env
+.env.*
+app.json

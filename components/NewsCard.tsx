@@ -300,8 +300,8 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
           onPress={handleReadMore}
           activeOpacity={0.7}
         >
-          <Icon name="external-link" size={20} color="#ffffff" style={styles.actionIcon} />
-          <Text style={[styles.actionText, { color: '#ffffff' }]}>Read More</Text>
+          <Icon name="external-link" size={20} color={theme.colors.background} style={styles.actionIcon} />
+          <Text style={[styles.actionText, { color: theme.colors.background }]}>Read More</Text>
         </TouchableOpacity>
       </View>
 

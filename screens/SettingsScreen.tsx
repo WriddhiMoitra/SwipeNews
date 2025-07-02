@@ -4,84 +4,10 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../contexts/ThemeContext';
 import { fallbackTheme } from '../constants/theme';
 
-export default function SettingsScreen({ onBack }: { onBack: () => void }) {
-  const { theme, toggleTheme } = useTheme();
-  const activeTheme = theme || fallbackTheme;
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Icon name="arrow-left" size={24} color={activeTheme.colors.text} />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-      </View>
-      <ScrollView style={styles.contentContainer}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Appearance</Text>
-          <TouchableOpacity
-            style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}
-            onPress={toggleTheme}
-          >
-            <Icon name="moon" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>Toggle Dark/Light Mode</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <TouchableOpacity style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}>
-            <Icon name="user" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>Profile Settings</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}>
-            <Icon name="lock" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>Change Password</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          <TouchableOpacity style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}>
-            <Icon name="globe" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>News Sources</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}>
-            <Icon name="filter" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>Content Filters</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <TouchableOpacity style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}>
-            <Icon name="info" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>About SwipeNews</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}>
-            <Icon name="file-text" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>Terms of Service</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.settingItem, { borderColor: activeTheme.colors.border }]}>
-            <Icon name="shield" size={20} color={activeTheme.colors.textSecondary} style={styles.settingIcon} />
-            <Text style={styles.settingText}>Privacy Policy</Text>
-            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
+const styles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -89,7 +15,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
   },
   backButton: {
     flexDirection: 'row',
@@ -99,12 +26,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 8,
     fontWeight: '500',
+    color: theme.colors.text,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '700',
+    color: theme.colors.text,
   },
   contentContainer: {
     flex: 1,
@@ -117,7 +46,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 12,
-    color: '#1a1a1a',
+    color: theme.colors.text,
   },
   settingItem: {
     flexDirection: 'row',
@@ -127,7 +56,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     marginBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
   },
   settingIcon: {
     marginRight: 16,
@@ -135,6 +65,81 @@ const styles = StyleSheet.create({
   settingText: {
     flex: 1,
     fontSize: 16,
-    color: '#1a1a1a',
+    color: theme.colors.text,
   },
 });
+
+export default function SettingsScreen({ onBack }: { onBack: () => void }) {
+  const { theme, toggleTheme } = useTheme();
+  const activeTheme = theme || fallbackTheme;
+  const themedStyles = styles(activeTheme);
+
+  return (
+    <SafeAreaView style={themedStyles.container}>
+      <View style={themedStyles.header}>
+        <TouchableOpacity onPress={onBack} style={themedStyles.backButton}>
+          <Icon name="arrow-left" size={24} color={activeTheme.colors.text} />
+          <Text style={themedStyles.backText}>Back</Text>
+        </TouchableOpacity>
+        <Text style={themedStyles.headerTitle}>Settings</Text>
+      </View>
+      <ScrollView style={themedStyles.contentContainer}>
+        <View style={themedStyles.section}>
+          <Text style={themedStyles.sectionTitle}>Appearance</Text>
+          <TouchableOpacity
+            style={themedStyles.settingItem}
+            onPress={toggleTheme}
+          >
+            <Icon name="moon" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>Toggle Dark/Light Mode</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        <View style={themedStyles.section}>
+          <Text style={themedStyles.sectionTitle}>Account</Text>
+          <TouchableOpacity style={themedStyles.settingItem}>
+            <Icon name="user" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>Profile Settings</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={themedStyles.settingItem}>
+            <Icon name="lock" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>Change Password</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        <View style={themedStyles.section}>
+          <Text style={themedStyles.sectionTitle}>Preferences</Text>
+          <TouchableOpacity style={themedStyles.settingItem}>
+            <Icon name="globe" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>News Sources</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={themedStyles.settingItem}>
+            <Icon name="filter" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>Content Filters</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        <View style={themedStyles.section}>
+          <Text style={themedStyles.sectionTitle}>About</Text>
+          <TouchableOpacity style={themedStyles.settingItem}>
+            <Icon name="info" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>About SwipeNews</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={themedStyles.settingItem}>
+            <Icon name="file-text" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>Terms of Service</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={themedStyles.settingItem}>
+            <Icon name="shield" size={20} color={activeTheme.colors.textSecondary} style={themedStyles.settingIcon} />
+            <Text style={themedStyles.settingText}>Privacy Policy</Text>
+            <Icon name="chevron-right" size={20} color={activeTheme.colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

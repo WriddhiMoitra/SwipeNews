@@ -1,4 +1,5 @@
 import { Article } from '../types/Article';
+import { API_BASE_URL } from '@env';
 
 /**
  * Fetch articles from local Node.js backend based on specified filters.
@@ -15,7 +16,8 @@ export const fetchArticles = async (
   try {
     const params = new URLSearchParams({ language, country });
     if (category) params.append('category', category);
-    const res = await fetch(`http://localhost:4000/articles?${params.toString()}`);
+    // Use API_BASE_URL from environment variables
+    const res = await fetch(`${API_BASE_URL}/articles?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch articles');
     const articles = await res.json();
     // Convert string dates to Date objects

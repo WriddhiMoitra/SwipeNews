@@ -17,11 +17,9 @@ export default function ProfileScreen() {
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setUserName(user.name || 'User Name');
-      setUserEmail(user.email || 'user@example.com');
-    }
-  }, [user]);
+    setUserName(user?.name || 'User Name');
+    setUserEmail(user?.email || 'user@example.com');
+  }, [user, theme]);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -204,7 +202,7 @@ export default function ProfileScreen() {
             />
           ) : (
             <View style={styles.profileImagePlaceholder}>
-              <Icon name="user" size={40} color="#E50914" />
+              <Icon name="user" size={40} color={theme.colors.primary} />
             </View>
           )}
         </View>

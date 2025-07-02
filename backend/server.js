@@ -67,6 +67,9 @@ global.syncFeedsWithSummaries = async function syncFeedsWithSummaries() {
             let summary = '';
             try {
               summary = await getGeminiAnswer('Summarize this news article in under 100 words.', `${title}. ${description}`);
+              if (!summary) {
+                summary = description.slice(0, 300) + (description.length > 300 ? '...' : '');
+              }
             } catch (e) {
               summary = description.slice(0, 300) + (description.length > 300 ? '...' : '');
             }
@@ -79,6 +82,9 @@ global.syncFeedsWithSummaries = async function syncFeedsWithSummaries() {
             let summary = '';
             try {
               summary = await getGeminiAnswer('Summarize this news article in under 100 words.', `${title}. ${description}`);
+              if (!summary) {
+                summary = description.slice(0, 300) + (description.length > 300 ? '...' : '');
+              }
             } catch (e) {
               summary = description.slice(0, 300) + (description.length > 300 ? '...' : '');
             }
