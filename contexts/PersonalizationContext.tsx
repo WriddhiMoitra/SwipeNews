@@ -85,7 +85,7 @@ export const PersonalizationProvider: React.FC<{ children: ReactNode }> = ({ chi
       getUserStats,
       resetPersonalization,
       isPersonalizationEnabled,
-      setPersonalizationEnabled
+      setPersonalizationEnabled: setIsPersonalizationEnabled
     }}>
       {children}
     </PersonalizationContext.Provider>
