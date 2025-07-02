@@ -43,12 +43,10 @@ export default function HomeScreen() {
   };
 
   const handleSwipedTop = async (index: number) => {
-    // User swiped up - save for later
+    // User swiped up - no save action
     if (state.articles[index]) {
       const article = state.articles[index];
-      toggleSaveArticle(article.id);
       await trackSwipeAction('up', article.id, article.category);
-      await trackArticleSaved(article.id, article.category, article.source_id);
     }
   };
 
