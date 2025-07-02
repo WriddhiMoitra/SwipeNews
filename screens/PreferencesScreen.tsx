@@ -536,6 +536,7 @@ export default function PreferencesScreen({ onPreferencesSet }: { onPreferencesS
         <View style={styles.progressContainer}>
           {steps.map((_, index) => (
             <View
+              key={index}
               style={[
                 styles.progressDot,
                 index <= currentStep ? styles.progressDotActive : null
