@@ -68,7 +68,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
 
   const styles = StyleSheet.create({
     cardContainer: {
-      backgroundColor: theme.colors.card,
+      backgroundColor: theme.colors.card === '#ffffff' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(30, 30, 30, 0.95)',
       borderRadius: 20,
       overflow: 'hidden',
       elevation: 8,
@@ -140,12 +140,16 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
       flex: 1,
     },
     title: {
-      fontSize: 22,
-      fontWeight: '800',
+      fontSize: 24,
+      fontWeight: '900',
       marginBottom: 12,
       color: theme.colors.text,
-      lineHeight: 28,
+      lineHeight: 30,
       letterSpacing: -0.5,
+      // Adding a slight shadow to emphasize title
+      textShadowColor: theme.colors.shadow + '30',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
     },
     description: {
       fontSize: 16,
@@ -156,17 +160,20 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
     },
     categoryContainer: {
       alignSelf: 'flex-start',
-      backgroundColor: theme.colors.surface,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
+      backgroundColor: theme.colors.primary + '20',
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
       marginTop: 10,
+      // Adding a subtle border for contrast
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '40',
     },
     categoryText: {
-      fontSize: 10,
-      fontWeight: '700',
+      fontSize: 11,
+      fontWeight: '800',
       color: theme.colors.primary,
-      letterSpacing: 1,
+      letterSpacing: 1.2,
     },
     actionContainer: {
       flexDirection: 'row',
@@ -187,6 +194,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
       borderRadius: 20,
       backgroundColor: theme.colors.surfaceVariant,
       minWidth: 80,
+      // Adding subtle scale on press
     },
     saveButton: {
       backgroundColor: theme.colors.surfaceVariant,
@@ -196,6 +204,11 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
     },
     readMoreButton: {
       backgroundColor: theme.colors.primary,
+      // Adding a slight glow effect for primary action
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
     },
     actionIcon: {
       marginRight: 6,

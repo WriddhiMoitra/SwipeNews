@@ -16,8 +16,9 @@ export const fetchArticles = async (
   try {
     const params = new URLSearchParams({ language, country });
     if (category) params.append('category', category);
-    // Use API_BASE_URL from environment variables
-    const res = await fetch(`${API_BASE_URL}/articles?${params.toString()}`);
+    // Temporarily hardcode the backend URL for testing
+    // Using the provided host machine IP address for iOS simulator/device connectivity
+    const res = await fetch(`http://192.168.101.10:4000/articles?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch articles');
     const articles = await res.json();
     // Convert string dates to Date objects

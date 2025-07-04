@@ -54,8 +54,8 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const theme = {
     colors: {
       primary: '#E50914',
-      text: isDark ? '#ffffff' : '#1a1a1a',
-      textSecondary: isDark ? '#b0b0b0' : '#666666',
+      text: isDark ? '#ffffff' : '#121212',
+      textSecondary: isDark ? '#b0b0b0' : '#4a4a4a',
       background: isDark ? '#121212' : '#ffffff',
       card: isDark ? '#1e1e1e' : '#ffffff',
       border: isDark ? '#333333' : '#e0e0e0',

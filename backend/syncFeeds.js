@@ -67,5 +67,4 @@ async function syncFeedsWithSummaries() {
 // Run the sync automatically when this script is executed
 syncFeedsWithSummaries().then(() => {
   console.log('RSS sync and summary generation complete.');
-  db.close();
 });

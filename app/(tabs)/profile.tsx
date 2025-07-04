@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -190,72 +190,74 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Profile</Text>
-      </View>
-      <View style={styles.profileContainer}>
-        <View style={styles.profileImageContainer}>
-          {user?.photoURL ? (
-            <Image
-              source={{ uri: user.photoURL }}
-              style={styles.profileImage}
-            />
-          ) : (
-            <View style={styles.profileImagePlaceholder}>
-              <Icon name="user" size={40} color={theme.colors.primary} />
-            </View>
-          )}
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Profile</Text>
         </View>
-        <Text style={styles.userName}>{userName}</Text>
-        <Text style={styles.userEmail}>{userEmail}</Text>
-      </View>
-      <View style={styles.statsContainer}>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>25</Text>
-          <Text style={styles.statText}>Read</Text>
+        <View style={styles.profileContainer}>
+          <View style={styles.profileImageContainer}>
+            {user?.photoURL ? (
+              <Image
+                source={{ uri: user.photoURL }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={styles.profileImagePlaceholder}>
+                <Icon name="user" size={40} color={theme.colors.primary} />
+              </View>
+            )}
+          </View>
+          <Text style={styles.userName}>{userName}</Text>
+          <Text style={styles.userEmail}>{userEmail}</Text>
         </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>10</Text>
-          <Text style={styles.statText}>Saved</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>25</Text>
+            <Text style={styles.statText}>Read</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>10</Text>
+            <Text style={styles.statText}>Saved</Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity style={styles.optionItem} onPress={handleEditProfile}>
-          <Icon name="user" size={24} color={theme.colors.text} />
-          <Text style={styles.optionText}>Edit Profile</Text>
-          <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem} onPress={handleSearch}>
-          <Icon name="search" size={24} color={theme.colors.text} />
-          <Text style={styles.optionText}>Search Articles</Text>
-          <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem} onPress={handleAnalytics}>
-          <Icon name="bar-chart-2" size={24} color={theme.colors.text} />
-          <Text style={styles.optionText}>Reading Analytics</Text>
-          <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem} onPress={handleSettings}>
-          <Icon name="settings" size={24} color={theme.colors.text} />
-          <Text style={styles.optionText}>Settings</Text>
-          <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem} onPress={handleNotifications}>
-          <Icon name="bell" size={24} color={theme.colors.text} />
-          <Text style={styles.optionText}>Notifications</Text>
-          <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem} onPress={handleHelpSupport}>
-          <Icon name="help-circle" size={24} color={theme.colors.text} />
-          <Text style={styles.optionText}>Help & Support</Text>
-          <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionItem} onPress={handleLogout}>
-          <Icon name="log-out" size={24} color={theme.colors.error} />
-          <Text style={[styles.optionText, { color: theme.colors.error }]}>Logout</Text>
-          <Icon name="chevron-right" size={24} color={theme.colors.error} style={styles.optionIcon} />
-        </TouchableOpacity>
-      </View>
+        <View style={styles.optionsContainer}>
+          <TouchableOpacity style={styles.optionItem} onPress={handleEditProfile}>
+            <Icon name="user" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Edit Profile</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleSearch}>
+            <Icon name="search" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Search Articles</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleAnalytics}>
+            <Icon name="bar-chart-2" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Reading Analytics</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleSettings}>
+            <Icon name="settings" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Settings</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleNotifications}>
+            <Icon name="bell" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Notifications</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleHelpSupport}>
+            <Icon name="help-circle" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Help & Support</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleLogout}>
+            <Icon name="log-out" size={24} color={theme.colors.error} />
+            <Text style={[styles.optionText, { color: theme.colors.error }]}>Logout</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.error} style={styles.optionIcon} />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
