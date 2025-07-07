@@ -14,12 +14,14 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { FeedProvider } from '../contexts/FeedContext';
 import { AnalyticsProvider } from '../contexts/AnalyticsContext';
 import { PersonalizationProvider } from '../contexts/PersonalizationContext';
-import { OfflineProvider } from '../contexts/OfflineContext';
+import { OfflineProvider } from '../contexts/OfflineContext'
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  useFrameworkReady();
   const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
