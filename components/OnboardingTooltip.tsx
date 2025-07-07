@@ -58,15 +58,21 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
     scale.value = withDelay(300, withSpring(1, { damping: 20, stiffness: 300 }));
     opacity.value = withDelay(300, withSpring(1));
 
-    // Animate arrow
-    arrowScale.value = withRepeat(
-      withSequence(
-        withTiming(1.2, { duration: 800 }),
-        withTiming(1, { duration: 800 })
-      ),
-      -1,
-      true
-    );
+    // Animate arrow with manual loop
+    let isAnimating = true;
+    const animateArrow = async () => {
+      while (isAnimating) {
+        arrowScale.value = withTiming(1.2, { duration: 800 });
+        await new Promise(resolve => setTimeout(resolve, 800));
+        arrowScale.value = withTiming(1, { duration: 800 });
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+    };
+    animateArrow();
+
+    return () => {
+      isAnimating = false;
+    };
   }, [currentStep]);
 
   const handleNext = () => {
