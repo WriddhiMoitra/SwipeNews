@@ -1,5 +1,5 @@
 import { Article } from '../types/Article';
-import { fetchArticles } from './newsService';
+import { fetchArticles, fetchTrendingArticles } from './newsService';
 import { PersonalizationEngine } from './personalizationEngine';
 import { UserProfileService } from './userProfileService';
 
@@ -21,7 +21,7 @@ export class PersonalizedNewsService {
   }
 
   /**
-   * Fetch personalized articles for a user
+   * Fetch personalized articles for a user from Firebase
    * @param userId - User ID
    * @param language - User's preferred language
    * @param country - User's preferred country/region
@@ -40,12 +40,12 @@ export class PersonalizedNewsService {
       // Get user profile to understand preferences
       const userProfile = await this.userProfileService.getUserProfile(userId);
 
-      // Fetch base articles from the database
+      // Fetch base articles from Firebase
       let baseArticles: Article[] = [];
 
       if (category) {
         // If specific category requested, fetch that
-        baseArticles = await fetchArticles(language, country, category);
+        baseArticles = await fetchArticles(language, country, category, limit * 2);
       } else {
         // For personalized feed, fetch from multiple categories
         const preferredCategories = this.userProfileService.getTopCategories(userProfile, 5);
@@ -61,14 +61,14 @@ export class PersonalizedNewsService {
 
         // Fetch articles from each category
         const articlePromises = categoriesToFetch.map(cat => 
-          fetchArticles(language, country, cat)
+          fetchArticles(language, country, cat, Math.ceil(limit / categoriesToFetch.length))
         );
         
         const categoryArticles = await Promise.all(articlePromises);
         baseArticles = categoryArticles.flat();
 
         // Also fetch some general articles for diversity
-        const generalArticles = await fetchArticles(language, country, 'general');
+        const generalArticles = await fetchArticles(language, country, 'general', 20);
         baseArticles = [...baseArticles, ...generalArticles];
 
         // Remove duplicates
@@ -89,12 +89,12 @@ export class PersonalizedNewsService {
       console.error('Error fetching personalized articles:', error);
       
       // Fallback to regular articles if personalization fails
-      return await fetchArticles(language, country, category);
+      return await fetchArticles(language, country, category, limit);
     }
   }
 
   /**
-   * Get articles for a new user with balanced content
+   * Get articles for a new user with balanced content from Firebase
    */
   async fetchBalancedFeedForNewUser(
     language: string = 'en',
@@ -106,8 +106,7 @@ export class PersonalizedNewsService {
       const articlesPerCategory = Math.ceil(limit / categories.length);
 
       const articlePromises = categories.map(category => 
-        fetchArticles(language, country, category)
-          .then(articles => articles.slice(0, articlesPerCategory))
+        fetchArticles(language, country, category, articlesPerCategory)
       );
 
       const categoryArticles = await Promise.all(articlePromises);
@@ -120,49 +119,28 @@ export class PersonalizedNewsService {
 
     } catch (error) {
       console.error('Error fetching balanced feed:', error);
-      return await fetchArticles(language, country);
+      return await fetchArticles(language, country, undefined, limit);
     }
   }
 
   /**
-   * Get trending articles based on engagement
+   * Get trending articles from Firebase
    */
-  async fetchTrendingArticles(
+  async fetchTrendingArticlesPersonalized(
     language: string = 'en',
     country: string = 'india',
     limit: number = 20
   ): Promise<Article[]> {
     try {
-      // Fetch recent articles from popular categories
-      const trendingCategories = ['general', 'business', 'technology', 'sports'];
-      
-      const articlePromises = trendingCategories.map(category => 
-        fetchArticles(language, country, category)
-      );
-
-      const categoryArticles = await Promise.all(articlePromises);
-      const allArticles = categoryArticles.flat();
-
-      // Sort by engagement score (if available) and recency
-      return allArticles
-        .sort((a, b) => {
-          // Primary sort by engagement score
-          const engagementDiff = (b.engagementScore || 0) - (a.engagementScore || 0);
-          if (engagementDiff !== 0) return engagementDiff;
-          
-          // Secondary sort by recency
-          return b.published_at.getTime() - a.published_at.getTime();
-        })
-        .slice(0, limit);
-
+      return await fetchTrendingArticles(language, country, limit);
     } catch (error) {
       console.error('Error fetching trending articles:', error);
-      return await fetchArticles(language, country);
+      return await fetchArticles(language, country, undefined, limit);
     }
   }
 
   /**
-   * Get articles similar to a given article (for "more like this" feature)
+   * Get articles similar to a given article from Firebase
    */
   async fetchSimilarArticles(
     baseArticle: Article,
@@ -174,7 +152,8 @@ export class PersonalizedNewsService {
       const similarArticles = await fetchArticles(
         baseArticle.language,
         baseArticle.country,
-        baseArticle.category
+        baseArticle.category,
+        limit * 2
       );
 
       // Filter out the base article

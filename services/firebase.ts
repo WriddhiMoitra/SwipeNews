@@ -1,13 +1,11 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-// Import for auth
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBYtq21blBS16DBiGmlkixYZ0aR_Adt0Ig",
   authDomain: "swipenews-beb55.firebaseapp.com",
