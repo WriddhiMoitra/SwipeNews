@@ -14,9 +14,12 @@ import Animated, {
   withDelay,
   withSequence,
   withTiming,
+  withRepeat,
+  interpolate,
+  Extrapolate,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import { ArrowUp, ArrowDown, X } from 'lucide-react-native';
+import { ArrowUp, ArrowDown, X, Sparkles } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -32,54 +35,88 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
   const arrowScale = useSharedValue(1);
+  const sparkleRotation = useSharedValue(0);
+  const contentTranslateY = useSharedValue(20);
 
   const steps = [
     {
-      title: 'Welcome to SwipeNews!',
-      description: 'Discover news that matters to you with personalized recommendations.',
+      title: 'Welcome to SwipeNews! ✨',
+      description: 'Discover personalized news that matters to you with our intelligent recommendation system.',
       position: 'center',
+      icon: Sparkles,
+      color: '#8B5CF6',
     },
     {
-      title: 'Swipe Up to Save',
-      description: 'Found something interesting? Swipe up to save articles for later reading.',
+      title: 'Swipe Up to Save 📚',
+      description: 'Found something interesting? Swipe up to bookmark articles for later reading.',
       position: 'bottom',
       icon: ArrowUp,
+      color: '#10B981',
     },
     {
-      title: 'Swipe Down for Next',
-      description: 'Ready for the next story? Swipe down to continue your news journey.',
+      title: 'Swipe Down for Next 📰',
+      description: 'Ready for the next story? Swipe down to continue your personalized news journey.',
       position: 'top',
       icon: ArrowDown,
+      color: '#3B82F6',
     },
   ];
 
   useEffect(() => {
-    // Animate in
-    scale.value = withDelay(300, withSpring(1, { damping: 20, stiffness: 300 }));
-    opacity.value = withDelay(300, withSpring(1));
+    // Entrance animation
+    scale.value = withDelay(300, withSpring(1, { 
+      damping: 20, 
+      stiffness: 300,
+      mass: 0.8
+    }));
+    
+    opacity.value = withDelay(300, withSpring(1, {
+      damping: 25,
+      stiffness: 400
+    }));
 
-    // Animate arrow
+    contentTranslateY.value = withDelay(400, withSpring(0, {
+      damping: 20,
+      stiffness: 300
+    }));
+
+    // Continuous animations
     arrowScale.value = withRepeat(
       withSequence(
-        withTiming(1.2, { duration: 800 }),
-        withTiming(1, { duration: 800 })
+        withTiming(1.2, { duration: 1000 }),
+        withTiming(1, { duration: 1000 })
       ),
       -1,
       true
+    );
+
+    sparkleRotation.value = withRepeat(
+      withTiming(360, { duration: 3000 }),
+      -1,
+      false
     );
   }, [currentStep]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      // Animate out current step
+      contentTranslateY.value = withTiming(-20, { duration: 200 });
+      opacity.value = withTiming(0.7, { duration: 200 });
+      
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        // Animate in new step
+        contentTranslateY.value = withTiming(0, { duration: 300 });
+        opacity.value = withTiming(1, { duration: 300 });
+      }, 200);
     } else {
       handleClose();
     }
   };
 
   const handleClose = () => {
-    scale.value = withSpring(0);
-    opacity.value = withSpring(0);
+    scale.value = withSpring(0, { damping: 20, stiffness: 300 });
+    opacity.value = withSpring(0, { damping: 25, stiffness: 400 });
     setTimeout(onComplete, 300);
   };
 
@@ -88,8 +125,16 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
     opacity: opacity.value,
   }));
 
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: contentTranslateY.value }],
+  }));
+
   const arrowAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: arrowScale.value }],
+  }));
+
+  const sparkleAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${sparkleRotation.value}deg` }],
   }));
 
   const currentStepData = steps[currentStep];
@@ -98,51 +143,73 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
   const getTooltipPosition = () => {
     switch (currentStepData.position) {
       case 'top':
-        return { top: SCREEN_HEIGHT * 0.2 };
+        return { 
+          top: SCREEN_HEIGHT * 0.15,
+          justifyContent: 'flex-start' as const
+        };
       case 'bottom':
-        return { bottom: SCREEN_HEIGHT * 0.2 };
+        return { 
+          bottom: SCREEN_HEIGHT * 0.15,
+          justifyContent: 'flex-end' as const
+        };
       default:
-        return { top: SCREEN_HEIGHT * 0.4 };
+        return { 
+          justifyContent: 'center' as const,
+          alignItems: 'center' as const
+        };
     }
   };
 
   const styles = StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      ...getTooltipPosition(),
+      paddingHorizontal: 24,
     },
     tooltip: {
       backgroundColor: theme.colors.card,
-      borderRadius: 20,
-      padding: 24,
-      marginHorizontal: 32,
-      maxWidth: SCREEN_WIDTH - 64,
+      borderRadius: 28,
+      padding: 32,
+      marginHorizontal: 8,
+      maxWidth: SCREEN_WIDTH - 48,
       alignItems: 'center',
-      ...getTooltipPosition(),
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 20 },
+      shadowOpacity: 0.25,
+      shadowRadius: 25,
+      elevation: 25,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
     closeButton: {
       position: 'absolute',
       top: 16,
       right: 16,
       padding: 8,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surface,
     },
     iconContainer: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      backgroundColor: theme.colors.primary + '20',
+      width: 80,
+      height: 80,
+      borderRadius: 40,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: 24,
+      shadowColor: currentStepData.color,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 16,
+      elevation: 8,
     },
     title: {
-      fontSize: 20,
+      fontSize: 24,
       fontFamily: 'Inter-Bold',
       color: theme.colors.text,
       textAlign: 'center',
-      marginBottom: 12,
+      marginBottom: 16,
+      letterSpacing: -0.5,
     },
     description: {
       fontSize: 16,
@@ -150,20 +217,29 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
       color: theme.colors.textSecondary,
       textAlign: 'center',
       lineHeight: 24,
-      marginBottom: 24,
+      marginBottom: 32,
     },
     actions: {
       flexDirection: 'row',
-      gap: 12,
+      gap: 16,
+      width: '100%',
     },
     button: {
+      flex: 1,
       paddingHorizontal: 24,
-      paddingVertical: 12,
+      paddingVertical: 16,
       borderRadius: 24,
       backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     primaryButton: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: currentStepData.color,
+      shadowColor: currentStepData.color,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
     },
     buttonText: {
       fontSize: 16,
@@ -172,22 +248,42 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
     },
     primaryButtonText: {
       color: 'white',
+      fontFamily: 'Inter-Bold',
     },
     stepIndicator: {
       flexDirection: 'row',
-      marginBottom: 16,
-      gap: 8,
+      marginBottom: 24,
+      gap: 12,
     },
     stepDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
+      width: 12,
+      height: 12,
+      borderRadius: 6,
       backgroundColor: theme.colors.surface,
+      borderWidth: 2,
+      borderColor: theme.colors.border,
     },
     stepDotActive: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: currentStepData.color,
+      borderColor: currentStepData.color,
+      transform: [{ scale: 1.2 }],
+    },
+    progressBar: {
+      width: '100%',
+      height: 4,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 2,
+      marginBottom: 24,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: currentStepData.color,
+      borderRadius: 2,
     },
   });
+
+  const progressWidth = ((currentStep + 1) / steps.length) * 100;
 
   return (
     <Modal visible transparent animationType="fade">
@@ -197,49 +293,69 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
             <X size={20} color={theme.colors.textSecondary} />
           </TouchableOpacity>
 
-          {/* Step Indicator */}
-          <View style={styles.stepIndicator}>
-            {steps.map((_, index) => (
-              <View
-                key={index}
+          <Animated.View style={contentAnimatedStyle}>
+            {/* Progress Bar */}
+            <View style={styles.progressBar}>
+              <Animated.View 
                 style={[
-                  styles.stepDot,
-                  index === currentStep && styles.stepDotActive,
-                ]}
+                  styles.progressFill, 
+                  { width: `${progressWidth}%` }
+                ]} 
               />
-            ))}
-          </View>
+            </View>
 
-          {/* Icon */}
-          {IconComponent && (
-            <Animated.View style={[styles.iconContainer, arrowAnimatedStyle]}>
-              <IconComponent size={28} color={theme.colors.primary} />
-            </Animated.View>
-          )}
+            {/* Step Indicator */}
+            <View style={styles.stepIndicator}>
+              {steps.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.stepDot,
+                    index === currentStep && styles.stepDotActive,
+                  ]}
+                />
+              ))}
+            </View>
 
-          {/* Content */}
-          <Text style={styles.title}>{currentStepData.title}</Text>
-          <Text style={styles.description}>{currentStepData.description}</Text>
-
-          {/* Actions */}
-          <View style={styles.actions}>
-            {currentStep > 0 && (
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => setCurrentStep(currentStep - 1)}
-              >
-                <Text style={styles.buttonText}>Back</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={handleNext}
+            {/* Icon */}
+            <Animated.View 
+              style={[
+                styles.iconContainer, 
+                { backgroundColor: currentStepData.color + '20' },
+                currentStep === 0 ? sparkleAnimatedStyle : arrowAnimatedStyle
+              ]}
             >
-              <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                {currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <IconComponent size={36} color={currentStepData.color} strokeWidth={2.5} />
+            </Animated.View>
+
+            {/* Content */}
+            <Text style={styles.title}>{currentStepData.title}</Text>
+            <Text style={styles.description}>{currentStepData.description}</Text>
+
+            {/* Actions */}
+            <View style={styles.actions}>
+              {currentStep > 0 && (
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => setCurrentStep(currentStep - 1)}
+                >
+                  <Text style={styles.buttonText}>Back</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[
+                  styles.button, 
+                  styles.primaryButton,
+                  currentStep === 0 && { flex: 1 }
+                ]}
+                onPress={handleNext}
+              >
+                <Text style={[styles.buttonText, styles.primaryButtonText]}>
+                  {currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
         </Animated.View>
       </BlurView>
     </Modal>

@@ -16,7 +16,9 @@ import Animated, {
   withDelay,
   runOnJS,
   interpolate,
-  Extrapolate
+  Extrapolate,
+  withTiming,
+  withSequence,
 } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useFeed } from '../../contexts/FeedContext';
@@ -29,7 +31,9 @@ import OnboardingTooltip from '../../components/OnboardingTooltip';
 import { Article } from '../../types/Article';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_HEIGHT = SCREEN_HEIGHT * 0.75;
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.78;
+const SWIPE_THRESHOLD = 100;
+const VELOCITY_THRESHOLD = 800;
 
 export default function HomeScreen() {
   const { state, refreshFeed, markAsRead, toggleSaveArticle } = useFeed();
@@ -45,18 +49,27 @@ export default function HomeScreen() {
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const nextCardScale = useSharedValue(0.95);
+  const nextCardOpacity = useSharedValue(0.7);
+  const headerOpacity = useSharedValue(1);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     refreshFeed();
-    // Show onboarding for new users
+    // Show onboarding for new users after a delay
     if (user && state.articles.length === 0) {
-      setTimeout(() => setShowOnboarding(true), 1000);
+      setTimeout(() => setShowOnboarding(true), 2000);
     }
   }, []);
 
   useEffect(() => {
     setArticleStartTime(new Date());
+    
+    // Animate header when changing articles
+    headerOpacity.value = withSequence(
+      withTiming(0.7, { duration: 200 }),
+      withTiming(1, { duration: 300 })
+    );
   }, [currentIndex]);
 
   const onRefresh = async () => {
@@ -65,6 +78,8 @@ export default function HomeScreen() {
     setRefreshing(false);
     setCurrentIndex(0);
     translateY.value = 0;
+    scale.value = 1;
+    opacity.value = 1;
   };
 
   const handleSwipeUp = async () => {
@@ -74,12 +89,14 @@ export default function HomeScreen() {
       await trackSwipeAction('up', article.id, article.category);
       
       // Animate to next card
-      translateY.value = withSpring(-CARD_HEIGHT, {
-        damping: 20,
-        stiffness: 300,
+      translateY.value = withSpring(-SCREEN_HEIGHT, {
+        damping: 25,
+        stiffness: 400,
       }, () => {
         runOnJS(setCurrentIndex)(currentIndex + 1);
         translateY.value = 0;
+        scale.value = 1;
+        opacity.value = 1;
       });
     }
   };
@@ -96,12 +113,14 @@ export default function HomeScreen() {
       await trackSwipeAction('down', article.id, article.category);
       
       // Animate to next card
-      translateY.value = withSpring(CARD_HEIGHT, {
-        damping: 20,
-        stiffness: 300,
+      translateY.value = withSpring(SCREEN_HEIGHT, {
+        damping: 25,
+        stiffness: 400,
       }, () => {
         runOnJS(setCurrentIndex)(currentIndex + 1);
         translateY.value = 0;
+        scale.value = 1;
+        opacity.value = 1;
       });
     }
   };
@@ -110,35 +129,54 @@ export default function HomeScreen() {
     .onUpdate((event) => {
       translateY.value = event.translationY;
       
-      // Scale and opacity effects
-      const progress = Math.abs(event.translationY) / (CARD_HEIGHT * 0.3);
+      // Enhanced visual feedback
+      const progress = Math.abs(event.translationY) / SWIPE_THRESHOLD;
+      const clampedProgress = Math.min(progress, 1);
+      
       scale.value = interpolate(
-        progress,
+        clampedProgress,
         [0, 1],
-        [1, 0.95],
+        [1, 0.92],
         Extrapolate.CLAMP
       );
+      
       opacity.value = interpolate(
-        progress,
+        clampedProgress,
         [0, 1],
         [1, 0.8],
         Extrapolate.CLAMP
       );
+
+      // Next card preview
+      nextCardScale.value = interpolate(
+        clampedProgress,
+        [0, 1],
+        [0.95, 1],
+        Extrapolate.CLAMP
+      );
+
+      nextCardOpacity.value = interpolate(
+        clampedProgress,
+        [0, 1],
+        [0.7, 1],
+        Extrapolate.CLAMP
+      );
     })
     .onEnd((event) => {
-      const threshold = CARD_HEIGHT * 0.2;
+      const shouldSwipeUp = event.translationY < -SWIPE_THRESHOLD && event.velocityY < -VELOCITY_THRESHOLD;
+      const shouldSwipeDown = event.translationY > SWIPE_THRESHOLD && event.velocityY > VELOCITY_THRESHOLD;
       
-      if (event.translationY < -threshold && event.velocityY < -500) {
-        // Swipe up - Save article
+      if (shouldSwipeUp) {
         runOnJS(handleSwipeUp)();
-      } else if (event.translationY > threshold && event.velocityY > 500) {
-        // Swipe down - Next article
+      } else if (shouldSwipeDown) {
         runOnJS(handleSwipeDown)();
       } else {
-        // Return to original position
-        translateY.value = withSpring(0);
-        scale.value = withSpring(1);
-        opacity.value = withSpring(1);
+        // Return to original position with spring animation
+        translateY.value = withSpring(0, { damping: 20, stiffness: 300 });
+        scale.value = withSpring(1, { damping: 20, stiffness: 300 });
+        opacity.value = withSpring(1, { damping: 20, stiffness: 300 });
+        nextCardScale.value = withSpring(0.95, { damping: 20, stiffness: 300 });
+        nextCardOpacity.value = withSpring(0.7, { damping: 20, stiffness: 300 });
       }
     });
 
@@ -151,22 +189,12 @@ export default function HomeScreen() {
   }));
 
   const nextCardStyle = useAnimatedStyle(() => ({
-    transform: [
-      { 
-        scale: interpolate(
-          Math.abs(translateY.value),
-          [0, CARD_HEIGHT * 0.3],
-          [0.9, 1],
-          Extrapolate.CLAMP
-        )
-      }
-    ],
-    opacity: interpolate(
-      Math.abs(translateY.value),
-      [0, CARD_HEIGHT * 0.3],
-      [0.5, 1],
-      Extrapolate.CLAMP
-    ),
+    transform: [{ scale: nextCardScale.value }],
+    opacity: nextCardOpacity.value,
+  }));
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: headerOpacity.value,
   }));
 
   const styles = StyleSheet.create({
@@ -176,31 +204,56 @@ export default function HomeScreen() {
     },
     header: {
       paddingTop: Platform.OS === 'ios' ? 60 : 40,
-      paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingHorizontal: 24,
+      paddingBottom: 24,
       backgroundColor: theme.colors.background,
     },
     headerTitle: {
-      fontSize: 32,
+      fontSize: 34,
       fontFamily: 'Inter-Bold',
       color: theme.colors.text,
       marginBottom: 8,
+      letterSpacing: -1,
     },
     headerSubtitle: {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
+      lineHeight: 22,
+    },
+    progressContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 16,
+      paddingHorizontal: 4,
+    },
+    progressBar: {
+      flex: 1,
+      height: 4,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 2,
+      marginRight: 12,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: theme.colors.primary,
+      borderRadius: 2,
+    },
+    progressText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.textSecondary,
+      minWidth: 60,
+      textAlign: 'right',
     },
     cardContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 16,
     },
     card: {
       position: 'absolute',
-      width: SCREEN_WIDTH - 32,
-      height: CARD_HEIGHT,
     },
     emptyContainer: {
       flex: 1,
@@ -214,13 +267,28 @@ export default function HomeScreen() {
       color: theme.colors.textSecondary,
       textAlign: 'center',
       marginTop: 20,
+      lineHeight: 26,
     },
     swipeHint: {
       position: 'absolute',
-      bottom: 120,
+      bottom: Platform.OS === 'ios' ? 120 : 100,
       left: 0,
       right: 0,
       alignItems: 'center',
+      paddingHorizontal: 24,
+    },
+    swipeHintContainer: {
+      backgroundColor: theme.colors.card,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 24,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
     swipeHintText: {
       fontSize: 14,
@@ -233,10 +301,10 @@ export default function HomeScreen() {
   if (state.isLoading && state.articles.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, headerAnimatedStyle]}>
           <Text style={styles.headerTitle}>SwipeNews</Text>
           <Text style={styles.headerSubtitle}>Loading your personalized feed...</Text>
-        </View>
+        </Animated.View>
         <LoadingShimmer />
       </SafeAreaView>
     );
@@ -284,15 +352,30 @@ export default function HomeScreen() {
 
   const currentArticle = state.articles[currentIndex];
   const nextArticle = state.articles[currentIndex + 1];
+  const progressPercentage = ((currentIndex + 1) / state.articles.length) * 100;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <Animated.View style={[styles.header, headerAnimatedStyle]}>
         <Text style={styles.headerTitle}>SwipeNews</Text>
         <Text style={styles.headerSubtitle}>
-          {currentIndex + 1} of {state.articles.length} articles
+          Discover stories that matter to you
         </Text>
-      </View>
+        
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <Animated.View 
+              style={[
+                styles.progressFill, 
+                { width: `${progressPercentage}%` }
+              ]} 
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {currentIndex + 1} of {state.articles.length}
+          </Text>
+        </View>
+      </Animated.View>
 
       <View style={styles.cardContainer}>
         {/* Next card (behind) */}
@@ -303,6 +386,7 @@ export default function HomeScreen() {
               onSave={() => toggleSaveArticle(nextArticle.id)}
               onShare={() => {}}
               isActive={false}
+              index={1}
             />
           </Animated.View>
         )}
@@ -316,6 +400,7 @@ export default function HomeScreen() {
                 onSave={() => toggleSaveArticle(currentArticle.id)}
                 onShare={() => {}}
                 isActive={true}
+                index={0}
               />
             </Animated.View>
           </GestureDetector>
@@ -324,9 +409,11 @@ export default function HomeScreen() {
 
       {/* Swipe hints */}
       <View style={styles.swipeHint}>
-        <Text style={styles.swipeHintText}>
-          Swipe up to save • Swipe down for next
-        </Text>
+        <View style={styles.swipeHintContainer}>
+          <Text style={styles.swipeHintText}>
+            Swipe up to save • Swipe down for next
+          </Text>
+        </View>
       </View>
 
       {/* Onboarding tooltip */}

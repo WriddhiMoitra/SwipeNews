@@ -4,7 +4,7 @@ import { Article } from '../types/Article';
 import { useFeed } from '../contexts/FeedContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAnalytics } from '../contexts/AnalyticsContext';
-import Icon from 'react-native-vector-icons/Feather';
+import { Bookmark, Share2, ExternalLink, Clock, Eye } from 'lucide-react-native';
 
 interface NewsCardProps {
   article: Article;
@@ -36,10 +36,39 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
     }
   };
 
-  // Generate a placeholder image URL based on article title
+  const getReadingTime = (text: string) => {
+    const wordsPerMinute = 200;
+    const words = text.split(' ').length;
+    return Math.max(1, Math.ceil(words / wordsPerMinute));
+  };
+
   const getPlaceholderImage = () => {
-    const seed = article.title.replace(/\s+/g, '+');
-    return `https://picsum.photos/400/250?random=${article.id}`;
+    const categories = {
+      technology: 'https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=800',
+      business: 'https://images.pexels.com/photos/590020/pexels-photo-590020.jpeg?auto=compress&cs=tinysrgb&w=800',
+      sports: 'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
+      entertainment: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800',
+      health: 'https://images.pexels.com/photos/40568/medical-appointment-doctor-healthcare-40568.jpeg?auto=compress&cs=tinysrgb&w=800',
+      science: 'https://images.pexels.com/photos/2280549/pexels-photo-2280549.jpeg?auto=compress&cs=tinysrgb&w=800',
+      politics: 'https://images.pexels.com/photos/1550337/pexels-photo-1550337.jpeg?auto=compress&cs=tinysrgb&w=800',
+      general: 'https://images.pexels.com/photos/518543/pexels-photo-518543.jpeg?auto=compress&cs=tinysrgb&w=800',
+    };
+    
+    return categories[article.category as keyof typeof categories] || categories.general;
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      technology: '#3B82F6',
+      business: '#10B981',
+      sports: '#F59E0B',
+      entertainment: '#EF4444',
+      health: '#06B6D4',
+      science: '#8B5CF6',
+      politics: '#DC2626',
+      general: '#6B7280',
+    };
+    return colors[category as keyof typeof colors] || colors.general;
   };
 
   const handleShare = async () => {
@@ -68,60 +97,23 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
 
   const styles = StyleSheet.create({
     cardContainer: {
-      backgroundColor: theme.colors.card === '#ffffff' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(30, 30, 30, 0.95)',
+      backgroundColor: theme.colors.card,
       borderRadius: 20,
       overflow: 'hidden',
-      elevation: 8,
+      marginHorizontal: 16,
+      marginVertical: 8,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      margin: 0,
-      height: height - 140,
-      width: width - 32,
-      flexDirection: 'column',
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 10,
-    },
-    sourceContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    sourceDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: theme.colors.primary,
-      marginRight: 8,
-    },
-    sourceText: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: theme.colors.primary,
-      letterSpacing: 1,
-    },
-    timeText: {
-      fontSize: 12,
-      color: theme.colors.textSecondary,
-      fontWeight: '500',
-    },
-    contentScrollView: {
-      flex: 1,
-    },
     imageContainer: {
       height: 200,
-      marginHorizontal: 20,
-      borderRadius: 12,
-      overflow: 'hidden',
       position: 'relative',
+      overflow: 'hidden',
     },
     articleImage: {
       width: '100%',
@@ -129,199 +121,246 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
     },
     imageOverlay: {
       position: 'absolute',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      height: 60,
+      bottom: 0,
       backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    categoryBadge: {
+      position: 'absolute',
+      top: 16,
+      left: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    categoryText: {
+      color: 'white',
+      fontSize: 11,
+      fontFamily: 'Inter-SemiBold',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    readingTimeBadge: {
+      position: 'absolute',
+      top: 16,
+      right: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 14,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    readingTimeText: {
+      color: 'white',
+      fontSize: 11,
+      fontFamily: 'Inter-Medium',
+      marginLeft: 4,
+    },
+    engagementBadge: {
+      position: 'absolute',
+      bottom: 16,
+      left: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 14,
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    },
+    engagementText: {
+      color: theme.colors.text,
+      fontSize: 11,
+      fontFamily: 'Inter-Medium',
+      marginLeft: 4,
     },
     contentContainer: {
       padding: 20,
-      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    sourceContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sourceDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginRight: 8,
+    },
+    sourceText: {
+      fontSize: 12,
+      fontFamily: 'Inter-SemiBold',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      color: theme.colors.primary,
+    },
+    timeText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.textSecondary,
     },
     title: {
-      fontSize: 24,
-      fontWeight: '900',
-      marginBottom: 12,
+      fontSize: 18,
+      fontFamily: 'Inter-Bold',
       color: theme.colors.text,
-      lineHeight: 30,
-      letterSpacing: -0.5,
-      // Adding a slight shadow to emphasize title
-      textShadowColor: theme.colors.shadow + '30',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
+      lineHeight: 24,
+      marginBottom: 8,
+      letterSpacing: -0.2,
     },
     description: {
-      fontSize: 16,
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
-      marginBottom: 20,
-      lineHeight: 24,
-      fontWeight: '400',
-    },
-    categoryContainer: {
-      alignSelf: 'flex-start',
-      backgroundColor: theme.colors.primary + '20',
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 20,
-      marginTop: 10,
-      // Adding a subtle border for contrast
-      borderWidth: 1,
-      borderColor: theme.colors.primary + '40',
-    },
-    categoryText: {
-      fontSize: 11,
-      fontWeight: '800',
-      color: theme.colors.primary,
-      letterSpacing: 1.2,
+      lineHeight: 20,
+      marginBottom: 16,
     },
     actionContainer: {
       flexDirection: 'row',
-      justifyContent: 'space-around',
+      justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      backgroundColor: theme.colors.surface,
+      paddingTop: 16,
       borderTopWidth: 1,
       borderTopColor: theme.colors.border,
     },
     actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 16,
+      paddingHorizontal: 14,
       paddingVertical: 10,
-      borderRadius: 20,
-      backgroundColor: theme.colors.surfaceVariant,
-      minWidth: 80,
-      // Adding subtle scale on press
+      borderRadius: 18,
+      backgroundColor: theme.colors.surface,
+      minWidth: 70,
+      justifyContent: 'center',
     },
-    saveButton: {
-      backgroundColor: theme.colors.surfaceVariant,
-    },
-    shareButton: {
-      backgroundColor: theme.colors.surfaceVariant,
-    },
-    readMoreButton: {
-      backgroundColor: theme.colors.primary,
-      // Adding a slight glow effect for primary action
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-    },
-    actionIcon: {
-      marginRight: 6,
+    actionButtonActive: {
+      backgroundColor: theme.colors.primary + '15',
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '30',
     },
     actionText: {
       fontSize: 12,
+      fontFamily: 'Inter-SemiBold',
       color: theme.colors.text,
-      fontWeight: '600',
-      letterSpacing: 0.5,
+      marginLeft: 6,
     },
-    savedText: {
+    actionTextActive: {
       color: theme.colors.primary,
     },
-    swipeIndicator: {
-      alignItems: 'center',
-      paddingVertical: 12,
-      backgroundColor: theme.colors.surface,
+    readMoreButton: {
+      backgroundColor: theme.colors.primary,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 4,
     },
-    swipeBar: {
-      width: 40,
-      height: 4,
-      backgroundColor: theme.colors.outline,
-      borderRadius: 2,
-      marginBottom: 6,
-    },
-    swipeText: {
-      fontSize: 10,
-      color: theme.colors.textSecondary,
-      fontWeight: '500',
-      letterSpacing: 0.5,
+    readMoreText: {
+      color: 'white',
+      fontFamily: 'Inter-Bold',
     },
   });
 
   return (
     <View style={styles.cardContainer}>
-      {/* Header with source and time */}
-      <View style={styles.header}>
-        <View style={styles.sourceContainer}>
-          <View style={styles.sourceDot} />
-          <Text style={styles.sourceText}>{article.source_id.toUpperCase()}</Text>
+      {/* Image Section */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: article.imageUrl || getPlaceholderImage() }}
+          style={styles.articleImage}
+          resizeMode="cover"
+        />
+        <View style={styles.imageOverlay} />
+        
+        <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(article.category) + '90' }]}>
+          <Text style={styles.categoryText}>{article.category}</Text>
         </View>
-        <Text style={styles.timeText}>{formatTimeAgo(article.published_at)}</Text>
-      </View>
-
-      {/* Main content area */}
-      <ScrollView style={styles.contentScrollView} showsVerticalScrollIndicator={false}>
-        {/* Article Image */}
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: getPlaceholderImage() }}
-            style={styles.articleImage}
-            resizeMode="cover"
-          />
-          <View style={styles.imageOverlay} />
-        </View>
-
-        {/* Article Content */}
-        <View style={styles.contentContainer}>
-          <Text style={styles.title}>{article.title}</Text>
-          {/* Prefer summary if present, fallback to description */}
-          {article.summary ? (
-            <Text style={styles.description}>{article.summary}</Text>
-          ) : (
-            <Text style={styles.description}>{article.description}</Text>
-          )}
-          {/* Category tag */}
-          <View style={styles.categoryContainer}>
-            <Text style={styles.categoryText}>{article.category.toUpperCase()}</Text>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Action buttons */}
-      <View style={styles.actionContainer}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.saveButton]}
-          onPress={() => onSave(article.id)}
-          activeOpacity={0.7}
-        >
-          <Icon
-            name={isArticleSaved ? 'bookmark' : 'bookmark'}
-            size={20}
-            color={isArticleSaved ? theme.colors.primary : theme.colors.text}
-            style={styles.actionIcon}
-          />
-          <Text style={[styles.actionText, isArticleSaved && styles.savedText]}>
-            {isArticleSaved ? 'Saved' : 'Save'}
+        
+        <View style={styles.readingTimeBadge}>
+          <Clock size={10} color="white" />
+          <Text style={styles.readingTimeText}>
+            {getReadingTime(article.description)} min
           </Text>
-        </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.shareButton]}
-          onPress={handleShare}
-          activeOpacity={0.7}
-        >
-          <Icon name="share-2" size={20} color={theme.colors.text} style={styles.actionIcon} />
-          <Text style={styles.actionText}>Share</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.readMoreButton]}
-          onPress={handleReadMore}
-          activeOpacity={0.7}
-        >
-          <Icon name="external-link" size={20} color={theme.colors.background} style={styles.actionIcon} />
-          <Text style={[styles.actionText, { color: theme.colors.background }]}>Read More</Text>
-        </TouchableOpacity>
+        <View style={styles.engagementBadge}>
+          <Eye size={10} color={theme.colors.text} />
+          <Text style={styles.engagementText}>
+            {Math.floor(Math.random() * 1000) + 100}
+          </Text>
+        </View>
       </View>
 
-      {/* Swipe indicator */}
-      <View style={styles.swipeIndicator}>
-        <View style={styles.swipeBar} />
-        <Text style={styles.swipeText}>Swipe up for next story</Text>
+      {/* Content Section */}
+      <View style={styles.contentContainer}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.sourceContainer}>
+            <View style={[styles.sourceDot, { backgroundColor: getCategoryColor(article.category) }]} />
+            <Text style={styles.sourceText}>{article.source_id}</Text>
+          </View>
+          <Text style={styles.timeText}>{formatTimeAgo(article.published_at)}</Text>
+        </View>
+
+        {/* Title and Description */}
+        <Text style={styles.title} numberOfLines={2}>
+          {article.title}
+        </Text>
+        <Text style={styles.description} numberOfLines={3}>
+          {article.summary || article.description}
+        </Text>
+
+        {/* Actions */}
+        <View style={styles.actionContainer}>
+          <TouchableOpacity
+            style={[
+              styles.actionButton,
+              isArticleSaved && styles.actionButtonActive,
+            ]}
+            onPress={() => onSave(article.id)}
+            activeOpacity={0.7}
+          >
+            <Bookmark
+              size={14}
+              color={isArticleSaved ? theme.colors.primary : theme.colors.text}
+              fill={isArticleSaved ? theme.colors.primary : 'none'}
+            />
+            <Text
+              style={[
+                styles.actionText,
+                isArticleSaved && styles.actionTextActive,
+              ]}
+            >
+              {isArticleSaved ? 'Saved' : 'Save'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleShare}
+            activeOpacity={0.7}
+          >
+            <Share2 size={14} color={theme.colors.text} />
+            <Text style={styles.actionText}>Share</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.readMoreButton]}
+            onPress={handleReadMore}
+            activeOpacity={0.8}
+          >
+            <ExternalLink size={14} color="white" />
+            <Text style={[styles.actionText, styles.readMoreText]}>Read</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
