@@ -140,7 +140,7 @@ export default function ArticleDetailScreen({ article, onBack }: { article: Arti
   if (showWebView) {
     return (
       <SafeAreaView style={styles.container}>
-        <FloatingBackButton onPress={handleCloseWebView} activeTheme={activeTheme} styles={styles} />
+        <FloatingBackButton onPress={handleCloseWebView} activeTheme={activeTheme} styles={styles} position="top-left" />
         <View style={styles.progressBarWrapper}>
           <View style={styles.progressBarBg} />
           <Animated.View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: categoryColor }]} />
@@ -162,7 +162,7 @@ export default function ArticleDetailScreen({ article, onBack }: { article: Arti
   }
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.colors.background }]}>  
-      <FloatingBackButton onPress={onBack} activeTheme={activeTheme} styles={styles} />
+      <FloatingBackButton onPress={onBack} activeTheme={activeTheme} styles={styles} position="top-left" />
       <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }, { scale: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
         {/* Reading progress bar */}
         <View style={styles.progressBarWrapper}>
@@ -222,11 +222,19 @@ export default function ArticleDetailScreen({ article, onBack }: { article: Arti
 }
 
 // Animated, floating back button (always visible)
-const FloatingBackButton = ({ onPress, activeTheme, styles }: { onPress: () => void; activeTheme: typeof fallbackTheme; styles: any }) => (
-  <TouchableOpacity style={styles.floatingBackButton} onPress={onPress} activeOpacity={0.8}>
-    <ArrowLeft color={activeTheme.colors.text} size={26} />
-  </TouchableOpacity>
-);
+const FloatingBackButton = ({ onPress, activeTheme, styles, position = "top-left" }: { onPress: () => void; activeTheme: typeof fallbackTheme; styles: any; position?: "top-left" | "top" | "top-right" }) => {
+  let buttonStyle = styles.floatingBackButton;
+  if (position === "top") {
+    buttonStyle = { ...buttonStyle, left: '50%', transform: [{ translateX: -20 }] };
+  } else if (position === "top-right") {
+    buttonStyle = { ...buttonStyle, left: undefined, right: 18 };
+  }
+  return (
+    <TouchableOpacity style={buttonStyle} onPress={onPress} activeOpacity={0.8}>
+      <ArrowLeft color={activeTheme.colors.text} size={26} />
+    </TouchableOpacity>
+  );
+};
 
 function getStyles(activeTheme: typeof fallbackTheme) {
   return StyleSheet.create({
@@ -471,6 +479,9 @@ function getStyles(activeTheme: typeof fallbackTheme) {
       shadowOpacity: 0.18,
       shadowRadius: 6,
       elevation: 4,
+      // Add border and subtle shadow for better visibility
+      borderWidth: 1,
+      borderColor: activeTheme.colors.border,
     },
   });
 }

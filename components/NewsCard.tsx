@@ -81,9 +81,21 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onSave, onShare, onReadMor
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     onSave(article.id);
-    trackArticleSaved(article.id, article.category, article.source_id);
+    await trackArticleSaved(article.id, article.category, article.source_id);
+    try {
+      const { OfflineDownloadService } = await import('../services/offlineDownloadService');
+      const offlineService = OfflineDownloadService.getInstance();
+      const isDownloaded = await offlineService.isArticleDownloaded(article.id);
+      if (!isArticleSaved && !isDownloaded) {
+        await offlineService.downloadArticle(article);
+      } else if (isArticleSaved && isDownloaded) {
+        await offlineService.deleteOfflineArticle(article.id);
+      }
+    } catch (error) {
+      // Silent fail, offline is optional
+    }
   };
 
   const handleReadMore = async () => {

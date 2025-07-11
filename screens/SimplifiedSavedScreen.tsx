@@ -51,12 +51,30 @@ export default function SimplifiedSavedScreen() {
     setRefreshing(false);
   };
 
-  const savedArticles = state.articles.filter(article => state.savedArticles.includes(article.id));
+  // Only show articles that are both saved and available offline
+  const [offlineArticles, setOfflineArticles] = useState<Article[]>([]);
+
+  useEffect(() => {
+    const loadOfflineArticles = async () => {
+      try {
+        const allOffline = await offlineService.getOfflineArticles();
+        // Only show those that are also in savedArticles and map to Article type
+        const filtered = allOffline
+          .filter(a => state.savedArticles.includes(a.id) && a.article)
+          .map(a => ({ ...a.article, offline: true }));
+        setOfflineArticles(filtered);
+      } catch (error) {
+        setOfflineArticles([]);
+      }
+    };
+    loadOfflineArticles();
+  }, [state.savedArticles]);
+
   const filteredArticles = searchQuery 
-    ? savedArticles.filter(article => 
-        article.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        article.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    : savedArticles;
+    ? offlineArticles.filter(article => 
+        article.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        article.description?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : offlineArticles;
 
   const handleSave = async (articleId: string) => {
     await toggleSaveArticle(articleId);
@@ -64,7 +82,7 @@ export default function SimplifiedSavedScreen() {
   };
 
   const handleShare = async (url: string) => {
-    const article = savedArticles.find(a => a.url === url);
+    const article = offlineArticles.find(a => a.url === url);
     if (article && user?.id) {
       await trackArticleShared(article.id, article.category, article.source_id);
     }
