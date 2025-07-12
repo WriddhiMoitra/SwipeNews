@@ -3,6 +3,7 @@ import { UserBadge, UserStreak, UserChallenge, UserGamification } from '../types
 import { UserProfileService } from './userProfileService';
 
 const GAMIFICATION_KEY = 'user_gamification';
+const LEADERBOARD_KEY = 'global_leaderboard';
 
 export class GamificationService {
   private static instance: GamificationService;
@@ -15,7 +16,7 @@ export class GamificationService {
     return GamificationService.instance;
   }
 
-  // Available badges
+  // Available badges with enhanced system
   private readonly BADGES: Omit<UserBadge, 'unlockedAt' | 'progress'>[] = [
     {
       id: 'first_read',
@@ -25,6 +26,24 @@ export class GamificationService {
       category: 'reading',
       rarity: 'common',
       requirement: 1
+    },
+    {
+      id: 'early_bird',
+      name: 'Early Bird',
+      description: 'Read 5 articles before 9 AM',
+      icon: '🌅',
+      category: 'engagement',
+      rarity: 'rare',
+      requirement: 5
+    },
+    {
+      id: 'night_owl',
+      name: 'Night Owl',
+      description: 'Read 5 articles after 10 PM',
+      icon: '🦉',
+      category: 'engagement',
+      rarity: 'rare',
+      requirement: 5
     },
     {
       id: 'bookworm',
@@ -63,6 +82,15 @@ export class GamificationService {
       requirement: 7
     },
     {
+      id: 'month_master',
+      name: 'Month Master',
+      description: 'Read articles for 30 days straight',
+      icon: '👑',
+      category: 'streak',
+      rarity: 'legendary',
+      requirement: 30
+    },
+    {
       id: 'explorer',
       name: 'Explorer',
       description: 'Read articles from 5 different categories',
@@ -78,6 +106,24 @@ export class GamificationService {
       icon: '⚡',
       category: 'engagement',
       rarity: 'epic',
+      requirement: 10
+    },
+    {
+      id: 'social_butterfly',
+      name: 'Social Butterfly',
+      description: 'Share articles 5 days in a row',
+      icon: '🦋',
+      category: 'sharing',
+      rarity: 'epic',
+      requirement: 5
+    },
+    {
+      id: 'completionist',
+      name: 'Completionist',
+      description: 'Complete 10 daily challenges',
+      icon: '✅',
+      category: 'engagement',
+      rarity: 'legendary',
       requirement: 10
     }
   ];
@@ -146,6 +192,9 @@ export class GamificationService {
         `${GAMIFICATION_KEY}_${gamification.userId}`,
         JSON.stringify(gamification)
       );
+      
+      // Update leaderboard
+      await this.updateLeaderboard(gamification.userId, gamification.totalPoints);
     } catch (error) {
       console.error('Error saving gamification:', error);
     }
@@ -162,7 +211,8 @@ export class GamificationService {
     const newLevel = Math.floor(gamification.totalPoints / 1000) + 1;
     if (newLevel > gamification.level) {
       gamification.level = newLevel;
-      // Could trigger level up celebration here
+      // Award bonus points for leveling up
+      gamification.totalPoints += 100;
     }
 
     gamification.lastActivityDate = new Date();
@@ -207,6 +257,10 @@ export class GamificationService {
           shouldAward = gamification.streaks[0]?.bestCount >= 7;
           progress = Math.min(100, ((gamification.streaks[0]?.bestCount || 0) / 7) * 100);
           break;
+        case 'month_master':
+          shouldAward = gamification.streaks[0]?.bestCount >= 30;
+          progress = Math.min(100, ((gamification.streaks[0]?.bestCount || 0) / 30) * 100);
+          break;
         case 'explorer':
           const categoriesRead = new Set(
             profile.categoryPreferences
@@ -215,6 +269,11 @@ export class GamificationService {
           ).size;
           shouldAward = categoriesRead >= 5;
           progress = Math.min(100, (categoriesRead / 5) * 100);
+          break;
+        case 'speed_reader':
+          // This would need daily tracking - simplified for now
+          shouldAward = profile.behaviorData.totalArticlesRead >= 10;
+          progress = Math.min(100, (profile.behaviorData.totalArticlesRead / 10) * 100);
           break;
       }
 
@@ -314,6 +373,16 @@ export class GamificationService {
         progress: 0,
         reward: { points: 150 },
         expiresAt: tomorrow
+      },
+      {
+        id: 'sharing_challenge',
+        name: 'Share the Knowledge',
+        description: 'Share 2 articles today',
+        type: 'daily',
+        target: 2,
+        progress: 0,
+        reward: { points: 75 },
+        expiresAt: tomorrow
       }
     ];
   }
@@ -335,6 +404,64 @@ export class GamificationService {
       }
       
       await this.saveGamification(gamification);
+    }
+  }
+
+  // Leaderboard functionality
+  async updateLeaderboard(userId: string, points: number): Promise<void> {
+    try {
+      const leaderboardData = await AsyncStorage.getItem(LEADERBOARD_KEY);
+      let leaderboard: { [userId: string]: { points: number, level: number, name?: string } } = {};
+      
+      if (leaderboardData) {
+        leaderboard = JSON.parse(leaderboardData);
+      }
+      
+      const level = Math.floor(points / 1000) + 1;
+      leaderboard[userId] = { points, level };
+      
+      await AsyncStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
+    } catch (error) {
+      console.error('Error updating leaderboard:', error);
+    }
+  }
+
+  async getLeaderboard(limit: number = 10): Promise<Array<{ userId: string, points: number, level: number, rank: number }>> {
+    try {
+      const leaderboardData = await AsyncStorage.getItem(LEADERBOARD_KEY);
+      if (!leaderboardData) return [];
+      
+      const leaderboard = JSON.parse(leaderboardData);
+      const sortedEntries = Object.entries(leaderboard)
+        .map(([userId, data]: [string, any]) => ({
+          userId,
+          points: data.points,
+          level: data.level,
+          rank: 0
+        }))
+        .sort((a, b) => b.points - a.points)
+        .slice(0, limit);
+      
+      // Add ranks
+      sortedEntries.forEach((entry, index) => {
+        entry.rank = index + 1;
+      });
+      
+      return sortedEntries;
+    } catch (error) {
+      console.error('Error getting leaderboard:', error);
+      return [];
+    }
+  }
+
+  async getUserRank(userId: string): Promise<number> {
+    try {
+      const leaderboard = await this.getLeaderboard(1000); // Get more entries to find rank
+      const userEntry = leaderboard.find(entry => entry.userId === userId);
+      return userEntry ? userEntry.rank : -1;
+    } catch (error) {
+      console.error('Error getting user rank:', error);
+      return -1;
     }
   }
 

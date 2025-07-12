@@ -7,9 +7,11 @@ import { useEnhancedAnalytics } from '../../contexts/EnhancedAnalyticsContext';
 import { useNavigationTracking } from '../../hooks/useNavigationTracking';
 import SettingsScreen from '../../screens/SettingsScreen';
 import PrivacySettingsScreen from '../../screens/PrivacySettingsScreen';
-import EnhancedAnalyticsScreen from '../../screens/EnhancedAnalyticsScreen';
-import SearchScreen from '../../screens/SearchScreen';
 import AnalyticsScreen from '../../screens/AnalyticsScreen';
+import GamificationScreen from '../../screens/GamificationScreen';
+import OnboardingScreen from '../../screens/OnboardingScreen';
+import SearchScreen from '../../screens/SearchScreen';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 export default function ProfileScreen() {
   return <ImprovedProfileScreen />;
@@ -24,7 +26,10 @@ function ImprovedProfileScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showGamification, setShowGamification] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  const { trackTutorialAccess } = useOnboarding();
   
   // Add navigation tracking
   useNavigationTracking('ProfileScreen', true);
@@ -77,6 +82,15 @@ function ImprovedProfileScreen() {
     setShowAnalytics(true);
   };
 
+  const handleGamification = () => {
+    setShowGamification(true);
+  };
+
+  const handleTutorial = async () => {
+    await trackTutorialAccess();
+    setShowOnboarding(true);
+  };
+
   const handleNotifications = () => {
     // Placeholder for notifications functionality
     Alert.alert('Notifications', 'This feature is under development.');
@@ -96,7 +110,20 @@ function ImprovedProfileScreen() {
   }
 
   if (showAnalytics) {
-    return <EnhancedAnalyticsScreen onBack={() => setShowAnalytics(false)} />;
+    return <AnalyticsScreen onBack={() => setShowAnalytics(false)} />;
+  }
+
+  if (showGamification) {
+    return <GamificationScreen onBack={() => setShowGamification(false)} />;
+  }
+
+  if (showOnboarding) {
+    return (
+      <OnboardingScreen 
+        onComplete={() => setShowOnboarding(false)}
+        onSkip={() => setShowOnboarding(false)}
+      />
+    );
   }
 
   if (showPrivacySettings) {
@@ -253,6 +280,11 @@ function ImprovedProfileScreen() {
             <Text style={styles.optionText}>Reading Analytics</Text>
             <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
           </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleGamification}>
+            <Icon name="award" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Achievements & Rewards</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.optionItem} onPress={handleSettings}>
             <Icon name="settings" size={24} color={theme.colors.text} />
             <Text style={styles.optionText}>Settings</Text>
@@ -274,6 +306,11 @@ function ImprovedProfileScreen() {
           <TouchableOpacity style={styles.optionItem} onPress={handleHelpSupport}>
             <Icon name="help-circle" size={24} color={theme.colors.text} />
             <Text style={styles.optionText}>Help & Support</Text>
+            <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.optionItem} onPress={handleTutorial}>
+            <Icon name="play-circle" size={24} color={theme.colors.text} />
+            <Text style={styles.optionText}>Tutorial & Tips</Text>
             <Icon name="chevron-right" size={24} color={theme.colors.textSecondary} style={styles.optionIcon} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.optionItem} onPress={handleLogout}>
