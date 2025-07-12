@@ -16,7 +16,7 @@ import { useEnhancedAnalytics } from '../contexts/EnhancedAnalyticsContext';
 import { usePersonalization } from '../contexts/PersonalizationContext';
 import { fallbackTheme } from '../constants/theme';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
-import { Calendar, TrendingUp, BarChart3, PieChart as PieChartIcon, Download, Share2 } from 'lucide-react-native';
+import { Calendar, TrendingUp, ChartBar as BarChart3, ChartPie as PieChartIcon, Download, Share2 } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withDelay } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
