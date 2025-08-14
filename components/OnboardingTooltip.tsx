@@ -265,15 +265,16 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
       flexDirection: 'row',
       gap: 16,
       width: '100%',
+      justifyContent: 'center',
     },
     button: {
-      flex: 1,
       paddingHorizontal: 24,
       paddingVertical: 16,
       borderRadius: 24,
       backgroundColor: theme.colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
+      width: 'auto',
     },
     primaryButton: {
       backgroundColor: currentStepData.color,
@@ -287,6 +288,7 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
       fontSize: 16,
       fontFamily: 'Inter-SemiBold',
       color: theme.colors.text,
+      textAlign: 'center',
     },
     primaryButtonText: {
       color: 'white',
@@ -377,7 +379,7 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
             <View style={styles.actions}>
               {currentStep > 0 && (
                 <TouchableOpacity
-                  style={[styles.button, { flex: 1 }]}
+                  style={[styles.button]}
                   onPress={() => setCurrentStep(currentStep - 1)}
                   accessibilityLabel="Back"
                 >
@@ -388,7 +390,7 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
                 style={[
                   styles.button,
                   styles.primaryButton,
-                  { flex: 1, marginHorizontal: 4 },
+                  { marginHorizontal: 4 },
                 ]}
                 onPress={handleNext}
                 accessibilityLabel={currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
@@ -399,7 +401,7 @@ const OnboardingTooltip: React.FC<OnboardingTooltipProps> = ({ onComplete }) => 
               </TouchableOpacity>
               {currentStep < steps.length - 1 && (
                 <TouchableOpacity
-                  style={[styles.button, { flex: 1, backgroundColor: 'transparent', borderWidth: 0, marginLeft: 4 }]}
+                  style={[styles.button, { backgroundColor: 'transparent', borderWidth: 0, marginLeft: 4 }]}
                   onPress={handleClose}
                   accessibilityLabel="Skip tutorial"
                 >

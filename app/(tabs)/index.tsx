@@ -67,13 +67,11 @@ export default function HomeScreen() {
   useNavigationTracking('HomeScreen', true);
   
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [articleStartTime, setArticleStartTime] = useState<Date>(new Date());
-  const [headerVisible, setHeaderVisible] = useState(true);
   const [detailArticle, setDetailArticle] = useState<Article | null>(null);
   const [detailStartTime, setDetailStartTime] = useState<number | null>(null);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -81,8 +79,6 @@ export default function HomeScreen() {
   const opacity = useSharedValue(1);
   const nextCardScale = useSharedValue(0.95);
   const nextCardOpacity = useSharedValue(0.7);
-  const headerOpacity = useSharedValue(1);
-  const headerTranslateY = useSharedValue(0);
   const rotate = useSharedValue(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -96,40 +92,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     setArticleStartTime(new Date());
-    
-    // Animate header when changing articles
-    headerOpacity.value = withSequence(
-      withTiming(0.7, { duration: 200 }),
-      withTiming(1, { duration: 300 })
-    );
   }, [currentIndex]);
-
-  // Animate header out after first swipe
-  useEffect(() => {
-    if (currentIndex > 0 && headerVisible) {
-      headerOpacity.value = withTiming(0, { duration: 400 });
-      headerTranslateY.value = withTiming(-30, { duration: 400 });
-      setTimeout(() => setHeaderVisible(false), 400);
-    } else if (currentIndex === 0 && !headerVisible) {
-      setHeaderVisible(true);
-      headerOpacity.value = withTiming(1, { duration: 400 });
-      headerTranslateY.value = withTiming(0, { duration: 400 });
-    }
-  }, [currentIndex]);
-
-  useEffect(() => {
-    // Check localStorage for onboarding state
-    const seen = typeof window !== 'undefined' && window.localStorage?.getItem('swipeNewsOnboarding');
-    setHasSeenOnboarding(!!seen);
-  }, []);
-
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false);
-    setHasSeenOnboarding(true);
-    if (typeof window !== 'undefined') {
-      window.localStorage?.setItem('swipeNewsOnboarding', 'true');
-    }
-  };
 
   const onRefresh = async () => {
     const refreshStartTime = Date.now();
@@ -356,34 +319,12 @@ export default function HomeScreen() {
     };
   });
 
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
+  
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    header: {
-      paddingTop: Platform.OS === 'ios' ? 60 : 40,
-      paddingHorizontal: 24,
-      paddingBottom: 24,
-      backgroundColor: theme.colors.background,
-    },
-    headerTitle: {
-      fontSize: 34,
-      fontFamily: 'Inter-Bold',
-      color: theme.colors.text,
-      marginBottom: 8,
-      letterSpacing: -1,
-    },
-    headerSubtitle: {
-      fontSize: 16,
-      fontFamily: 'Inter-Regular',
-      color: theme.colors.textSecondary,
-      lineHeight: 22,
     },
     progressContainer: {
       flexDirection: 'row',
@@ -415,7 +356,6 @@ export default function HomeScreen() {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingBottom: 34, // Add padding to avoid overlap with navigation bar
     },
     card: {
       position: 'absolute',
@@ -486,10 +426,6 @@ export default function HomeScreen() {
   if (state.isLoading && state.articles.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
-        <Animated.View style={[styles.header, headerAnimatedStyle]}>
-          <Text style={styles.headerTitle}>SwipeNews</Text>
-          <Text style={styles.headerSubtitle}>Loading your personalized feed...</Text>
-        </Animated.View>
         <LoadingShimmer />
       </SafeAreaView>
     );
@@ -539,62 +475,11 @@ export default function HomeScreen() {
   const nextArticle = state.articles[currentIndex + 1];
   const progressPercentage = ((currentIndex + 1) / state.articles.length) * 100;
 
-  // Show onboarding only if not seen before and on first launch
-  if (!hasSeenOnboarding && showOnboarding) {
-    return (
-      <SafeAreaView style={styles.container}>
-        {/* Progress bar always visible */}
-        <Animated.View style={[styles.header, headerAnimatedStyle]}>
-          <View style={{ alignItems: 'center', width: '100%' }}>
-            <Text style={styles.headerTitle}>SwipeNews</Text>
-            <Text style={styles.headerSubtitle}>
-              Discover stories that matter to you
-            </Text>
-          </View>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <Animated.View 
-                style={[
-                  styles.progressFill, 
-                  { width: `0%` }
-                ]} 
-              />
-            </View>
-            <Text style={styles.progressText}>
-              0 of {state.articles.length}
-            </Text>
-          </View>
-        </Animated.View>
-        <OnboardingTooltip onComplete={handleOnboardingComplete} />
-      </SafeAreaView>
-    );
-  }
+  
 
   return (
     <SafeAreaView style={styles.container}>
-      {headerVisible && (
-        <Animated.View style={[styles.header, headerAnimatedStyle]}>
-          <View style={{ alignItems: 'center', width: '100%' }}>
-            <Text style={styles.headerTitle}>SwipeNews</Text>
-            <Text style={styles.headerSubtitle}>
-              Discover stories that matter to you
-            </Text>
-          </View>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <Animated.View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${progressPercentage}%` }
-                ]} 
-              />
-            </View>
-            <Text style={styles.progressText}>
-              {currentIndex + 1} of {state.articles.length}
-            </Text>
-          </View>
-        </Animated.View>
-      )}
+      
       <View style={styles.cardContainer}>
         {/* Always render previous card if available for seamless transition */}
         {currentIndex > 0 && (
@@ -653,6 +538,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Swipe hints */}
+      {currentIndex === 0 && (
       <View style={styles.swipeHint} accessible accessibilityLabel="Swipe up for next, down to skip, right to save">
         <View style={styles.swipeHintContainer}>
           <Text style={styles.swipeHintText}>
@@ -660,13 +546,11 @@ export default function HomeScreen() {
           </Text>
         </View>
       </View>
-
-      {/* Onboarding tooltip */}
-      {showOnboarding && (
-        <OnboardingTooltip
-          onComplete={() => setShowOnboarding(false)}
-        />
       )}
+
+      
+    {/* Onboarding tooltip */}
+      {showOnboarding && <OnboardingTooltip onComplete={() => setShowOnboarding(false)} />}
     </SafeAreaView>
   );
 }

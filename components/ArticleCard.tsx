@@ -33,8 +33,8 @@ import { Animated as RNAnimated } from 'react-native';
 import * as Sharing from 'expo-sharing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CARD_HEIGHT = SCREEN_HEIGHT * 0.74; // Reduce from 0.82 to 0.74 to avoid tab bar overlap
-const CARD_WIDTH = SCREEN_WIDTH - 32;
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.85; // Reduce from 0.82 to 0.74 to avoid tab bar overlap
+const CARD_WIDTH = SCREEN_WIDTH * 0.9;
 const CARD_BORDER_RADIUS = 28;
 
 interface ArticleCardProps {
